@@ -1,0 +1,25 @@
+Package: FlexDotPlot
+Type: Package
+Title: Flexible DotPlot
+Version: 0.1.1
+Author: Simon LEONARD
+Maintainer: Simon Leonard <simon_leonard@hotmail.fr>
+Description: Flexible Dotplot and Pacman plot for multimodal data
+Depends:
+    R (>= 3.1.0),
+    shiny,
+    shinydashboard,
+	shinyWidgets,
+    ggplot2,
+	ggforce,
+	ggdendro,
+	gtable,
+	grid,
+	gridExtra,
+	FactoMineR,
+    reshape2,
+	grDevices,
+	colourpicker
+License: GPL-2
+Encoding: UTF-8
+RoxygenNote: 6.1.1
