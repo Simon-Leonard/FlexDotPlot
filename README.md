@@ -14,7 +14,9 @@ devtools::install_github("Simon-Leonard/FlexDotPlot")
 library(FlexDotPlot)
 ```
 The FlexDotPlot package contains two functions : 
+
 1- The dot_plot() function to generate dot plot with commande line. Function help is available with help("dot_plot"). Read the FlexDotPlot tutorial to see how we can use this function in details.
+
 2- The Shiny_dot_plot() function to generate dot plot in an interactive way with a Shiny application.
 
 
