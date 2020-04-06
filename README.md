@@ -21,7 +21,9 @@ The FlexDotPlot package contains two functions :
 
 # Reference
 Simon Leonard, Antoine D Rolland, Karin Tarte, Frédéric Chalmel, Aurélie Lardenois
+
 FlexDotPlot: a universal and modular dot plot visualization tool for complex multifaceted data
+
 https://doi.org/10.1101/2020.04.03.023655
 
 # Contact
