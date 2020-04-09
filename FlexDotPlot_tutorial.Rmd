@@ -246,10 +246,22 @@ size.breaks.number argument define the number of shapes with different size to d
 dot_plot(data.to.plot = PBMC3K_example_data, size_var = "pct.exp", shape.scale = 8, size.breaks.number = 3)
 ```
 
+You can also directly specify the values to get in the legend with the size.breaks.values argument
+
+```{r}
+dot_plot(data.to.plot = PBMC3K_example_data, size_var = "pct.exp", shape.scale = 8, size.breaks.values = c(0,0.25,0.5,0.75,1))
+```
+
 color.breaks.number argument define the number of labels for the color gradient legend.
 
 ```{r}
 dot_plot(data.to.plot = PBMC3K_example_data, col_var = "pct.exp", shape.scale = 20, color.breaks.number = 3)
+```
+
+You can also directly specify the values to get in the legend with the color.breaks.values argument
+
+```{r}
+dot_plot(data.to.plot = PBMC3K_example_data, col_var = "pct.exp", shape.scale = 20, color.breaks.values = c(0,0.3,0.6,0.9))
 ```
 
 
