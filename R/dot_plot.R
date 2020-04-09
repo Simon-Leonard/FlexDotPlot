@@ -24,6 +24,7 @@
 #'   If coloring is continuous, default colors are taken from a "lightgrey" to "blue" gradient.
 #'   If coloring is discrete, default colors are taken from the default ggplot2 palette.
 #' @param shape.scale Scale the size of the shapes, similar to cex.
+#' @param display_max_sizes Boolean : Display max shape size behind each shape ? (Default=TRUE)
 #' @param scale.by Scale the size by size or radius.
 #' @param scale.min/scale.max Set lower and upper limits for scaling, use NA for default values.
 #' @param plot.legend Plot the legends ?
@@ -37,9 +38,12 @@
 #' @param text.size Size of text to display on the shapes.
 #' @param vertical_coloring Which color use to color the plot vertically ? (colors are repeated untill the end of the plot). Setting vertical and horizontal coloring at the same time is not recommended !
 #' @param horizontal_coloring Which color use to color the plot horizontally ? (colors are repeated untill the end of the plot). Setting vertical and horizontal coloring at the same time is not recommended !
-#' @param size.breaks.number Number of shapes with different size to display in the legend.
-#' @param color.breaks.number Number of labels for the color gradient legend.
-#' @param shape.breaks.number Number of shapes to display in the legend. Used when shape is controled by a continuous factor only.
+#' @param size.breaks.number Number of shapes with different size to display in the legend. Not used if size.breaks.values is not NA.
+#' @param size.breaks.values Vector containing numerical labels for the size legend.
+#' @param color.breaks.number Number of labels for the color gradient legend. Not used if color.breaks.values is not NA.
+#' @param color.breaks.values Vector containing numerical labels for continuous color legend.
+#' @param shape.breaks.number Number of shapes to display in the legend. Used when shape is controled by a continuous factor only. Not used if shape.breaks.values is not NA.
+#' @param shape.breaks.values Vector containing numerical labels for continuous shape legend.
 #' @param transpose Reverse x axis and y axis ?
 #' @param dend_x_var A vector containing Column/List indexes or Column/List names to compute the x axis dendrogramm.
 #' @param dend_y_var A vector containing Column/List indexes or Column/List names to compute the y axis dendrogramm.
@@ -55,6 +59,8 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
                         x.lab.rot = TRUE, x.lab.pos=c("both","top","bottom","none"), y.lab.pos=c("left","right","both","none"),
                         vertical_coloring=NA, horizontal_coloring=NA, 
                         size.breaks.number=4, color.breaks.number=5, shape.breaks.number=5,
+                        size.breaks.values=NA, color.breaks.values=NA, shape.breaks.values=NA,
+                        display_max_sizes=TRUE,
                         transpose=FALSE,
                         dend_x_var=NULL, dend_y_var=NULL, 
                         dist_method=c("euclidean", "maximum", "manhattan", "canberra","binary", "minkowski"),
@@ -461,7 +467,19 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
       if (length(x = cols.use) == 1) {
         cols.use=c(cols.use,cols.use)# Monochrome
       }
-      color_breaks=(seq(min(na.omit(data.to.plot[,4])),max(na.omit(data.to.plot[,4])), length.out=color.breaks.number))
+      
+      if (!(all(is.na(color.breaks.values)))){
+        if(all(is.numeric(color.breaks.values))){
+          cat("\n Putting color.breaks.values in color legend")
+          color_breaks=color.breaks.values
+        }else{
+          cat("\n Non numeric value in color.breaks.values, considering color.breaks.number instead")
+          color_breaks=(seq(min(na.omit(data.to.plot[,4])),max(na.omit(data.to.plot[,4])), length.out=color.breaks.number))
+        }
+      }else{
+        color_breaks=(seq(min(na.omit(data.to.plot[,4])),max(na.omit(data.to.plot[,4])), length.out=color.breaks.number))
+      }
+      
       color_labels=ifelse((abs(color_breaks)<1e-2 | abs(color_breaks)>1e2) & color_breaks!=0,
                           format(color_breaks, scientific=TRUE, digits=3),
                           round(color_breaks,2)) # Values <1e-3 or >1e3 (excepted 0), are displayed with scientific notation
@@ -502,19 +520,53 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
     
     ### 2.1.2 : Legend plot inside the pacman plot ----
     if (plot.legend){
-      
-      pacman_breaks=shape.breaks.number
-      x_pacman_leg=max(as.numeric(data.to.plot[,1]))+1.5
-      y_pacman_leg=0:(pacman_breaks-1)
+
       # Set pacman labels
-      ori_labels=seq(min(na.omit(shape)),max(na.omit(shape)),length.out = pacman_breaks)
+      if (!(all(is.na(shape.breaks.values)))){
+        if(all(is.numeric(shape.breaks.values))){
+          cat("\n Putting shape.breaks.values in shape legend")
+          ori_labels=shape.breaks.values
+        }else{
+          cat("\n Non numeric value in shape.breaks.values, considering shape.breaks.number instead")
+          ori_labels=seq(min(na.omit(shape)),max(na.omit(shape)),length.out = shape.breaks.number)
+        }
+      }else{
+        ori_labels=seq(min(na.omit(shape)),max(na.omit(shape)),length.out = shape.breaks.number)
+      }
+      
       cust_labels=ifelse((abs(ori_labels)<1e-2 | abs(ori_labels)>1e2) & ori_labels!=0, 
                          format(ori_labels, scientific=TRUE, digits=3), 
                          round(ori_labels,2)) # Values <1e-3 or >1e3 (excepted 0), are displayed with scientific notation
       
+      pacman_breaks=length(ori_labels)
+      x_pacman_leg=max(as.numeric(data.to.plot[,1]))+1.5
+      y_pacman_leg=0:(pacman_breaks-1)
+      
       if (!all(is.na(size_var))){
-        legend_breaks=(seq(min(na.omit(r)),max(na.omit(r)), length.out=size.breaks.number))
-        legend_ori=seq(min(na.omit(data.to.plot[,3])),max(na.omit(data.to.plot[,3])), length.out=size.breaks.number)
+        
+        if (!(all(is.na(size.breaks.values)))){
+          if(all(is.numeric(size.breaks.values))){
+            cat("\n Putting size.breaks.values in size legend")
+            
+            rr=data.to.plot[,3]
+            if(any(rr<0)){rr=rr-min(na.omit(rr))}
+            
+            rrr=size.breaks.values
+            if(any(rrr<0)){rrr=rrr-min(na.omit(rrr))}
+            
+            legend_breaks=rrr*0.4/max(na.omit(rr))
+            legend_ori=size.breaks.values
+            size.breaks.number=length(size.breaks.values)
+          }else{
+            cat("\n Non numeric value in size.breaks.values, considering size.breaks.number instead")
+            legend_breaks=(seq(min(na.omit(r)),max(na.omit(r)), length.out=size.breaks.number))
+            legend_ori=seq(min(na.omit(data.to.plot[,3])),max(na.omit(data.to.plot[,3])), length.out=size.breaks.number)
+          }
+        }else{
+          legend_breaks=(seq(min(na.omit(r)),max(na.omit(r)), length.out=size.breaks.number))
+          legend_ori=seq(min(na.omit(data.to.plot[,3])),max(na.omit(data.to.plot[,3])), length.out=size.breaks.number)
+        }
+        
         # legend_ori=legend_breaks/0.4*max(data.to.plot[,3])
         size_labels=ifelse((abs(legend_ori)<1e-2 | abs(legend_ori)>1e2) & legend_ori!=0,
                            format(legend_ori, scientific=TRUE, digits=3),
@@ -540,9 +592,9 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
         labels_leg=c(cust_labels,size_labels)
         
         # p <- p + geom_arc_bar(aes(x0 = x_coord, y0 = y_coord, r0 = 0, r = c(rep(0.4,pacman_breaks),legend_breaks),
-        #                           start = 0, end = c((0:(pacman_breaks))*2*pi/pacman_breaks,rep(2*pi, size.breaks.number))))
+        #                           start = 0, end = c(seq(0,2*pi,length.out = pacman_breaks),rep(2*pi, size.breaks.number))))
         p <- p + geom_arc_bar(aes(x0 = x_coord, y0 = y_coord, r0 = 0, r = c(rep(0.4,pacman_breaks),legend_breaks),
-                                  start = 0, end = c(seq(0,2*pi,length.out = pacman_breaks),rep(2*pi, size.breaks.number))))
+                                  start = 0, end = c(ori_labels*2*pi/max(na.omit(shape_pos)),rep(2*pi, size.breaks.number))))
         p <- p + annotate(geom = "text", x = x_coord+1, y = y_coord, label=labels_leg)
         p <- p + annotate(geom="text", x = c(x_pacman_leg,x_size_leg), y = c(max(y_pacman_leg),max(y_size_leg))+1, 
                           label=c(shape_legend,size_legend))
@@ -553,7 +605,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
         y_pacman_leg=y_pacman_leg+mean(as.numeric(data.to.plot[,2]))-mean(y_pacman_leg)
         
         p <- p + geom_arc_bar(aes(x0 = x_pacman_leg, y0 = y_pacman_leg, 
-                                  r0 = 0, r = 0.4, start = 0,end = seq(0,2*pi,length.out = pacman_breaks)), size=0.5)
+                                  r0 = 0, r = 0.4, start = 0,end = ori_labels*2*pi/max(na.omit(shape_pos))), size=0.5)
         p <- p + annotate(geom = "text", x = x_pacman_leg+1, y = y_pacman_leg, label=cust_labels)
         p <- p + annotate(geom="text", x = x_pacman_leg, y = max(y_pacman_leg)+1, label=shape_legend)
       }
@@ -634,8 +686,9 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
       # Displaying shapes
       if(length(shape)==1){
         p <- p + geom_point(mapping = aes(size = data.to.plot[,3], color = data.to.plot[,4]), shape=shape)
+        
         # Displaying maximal shapes area (only when shape %in% c(15,16,17,18))
-        if (all(shape %in% c(15,16,17,18))){
+        if (all(shape %in% c(15,16,17,18)) & display_max_sizes){
           background_shape=ifelse(shape %in% c(15,16,17),shape-15, shape-13)
           p <- p + geom_point(mapping = aes(size = max(na.omit(data.to.plot[,3]))), colour="black",shape=background_shape)
         }
@@ -660,13 +713,29 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
         p <- p + scale_shape_manual(values=custom_shapes)
         
         # Adding maximal shape area as a shade
-        p <- p + geom_point(mapping = aes(size = max(na.omit(data.to.plot[,3])),shape=as.factor(shape)), alpha=0.1)
+        if(display_max_sizes){
+          p <- p + geom_point(mapping = aes(size = max(na.omit(data.to.plot[,3])),shape=as.factor(shape)), alpha=0.1)
+        }
+        
         # Increasing shape legend size
         p <- p + guides(shape = guide_legend(override.aes = list(size = 5)))
       }
       
       # Changing shape size + shape size legend
-      legend_breaks=(seq(min(na.omit(data.to.plot[,3])),max(na.omit(data.to.plot[,3])), length.out=size.breaks.number))
+      
+      if (!(all(is.na(size.breaks.values)))){
+        if(all(is.numeric(size.breaks.values))){
+          cat("Putting size.breaks.values in size legend")
+          legend_breaks=size.breaks.values
+        }else{
+          cat("Non numeric value in size.breaks.values, considering size.breaks.number instead")
+          legend_breaks=(seq(min(na.omit(data.to.plot[,3])),max(na.omit(data.to.plot[,3])), length.out=size.breaks.number))
+        }
+      }else{
+        legend_breaks=(seq(min(na.omit(data.to.plot[,3])),max(na.omit(data.to.plot[,3])), length.out=size.breaks.number))
+      }
+      
+
       legend_labels=ifelse((abs(legend_breaks)<1e-2 | abs(legend_breaks)>1e2) & legend_breaks!=0, 
                            format(legend_breaks, scientific=TRUE, digits=3), 
                            round(legend_breaks,2)) # Values <1e-3 or >1e3 (excepted 0), are displayed with scientific notation
@@ -678,7 +747,19 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
         if (length(x = cols.use) == 1) {
           cols.use=c(cols.use,cols.use)# Monochrome
         }
-        color_breaks=(seq(min(na.omit(data.to.plot[,4])),max(na.omit(data.to.plot[,4])), length.out=color.breaks.number))
+        
+        if (!(all(is.na(color.breaks.values)))){
+          if(all(is.numeric(color.breaks.values))){
+            cat("\n Putting color.breaks.values in color legend")
+            color_breaks=color.breaks.values
+          }else{
+            cat("\n Non numeric value in color.breaks.values, considering color.breaks.number instead")
+            color_breaks=(seq(min(na.omit(data.to.plot[,4])),max(na.omit(data.to.plot[,4])), length.out=color.breaks.number))
+          }
+        }else{
+          color_breaks=(seq(min(na.omit(data.to.plot[,4])),max(na.omit(data.to.plot[,4])), length.out=color.breaks.number))
+        }
+        
         color_labels=ifelse((abs(color_breaks)<1e-2 | abs(color_breaks)>1e2) & color_breaks!=0, 
                             format(color_breaks, scientific=TRUE, digits=3), 
                             round(color_breaks,2)) # Values <1e-3 or >1e3 (excepted 0), are displayed with scientific notation
