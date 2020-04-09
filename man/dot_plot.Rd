@@ -5,20 +5,44 @@
 \alias{dot_plot}
 \title{Dot-plot - Pacman-plot function}
 \usage{
-dot_plot(data.to.plot, size_var = NA, col_var = NA, text_var = NA,
-  shape_var = 16, size_legend = "", col_legend = "",
-  shape_legend = "", cols.use = "default", shape.scale = 12,
-  text.size = NA, shape_use = "default", scale.by = "radius",
-  scale.min = NA, scale.max = NA, plot.legend = TRUE,
-  do.return = FALSE, x.lab.rot = TRUE, x.lab.pos = c("both", "top",
-  "bottom", "none"), y.lab.pos = c("left", "right", "both", "none"),
-  vertical_coloring = NA, horizontal_coloring = NA,
-  size.breaks.number = 4, color.breaks.number = 5,
-  shape.breaks.number = 5, transpose = FALSE, dend_x_var = NULL,
-  dend_y_var = NULL, dist_method = c("euclidean", "maximum",
-  "manhattan", "canberra", "binary", "minkowski"),
-  hclust_method = c("ward.D", "single", "complete", "average",
-  "mcquitty", "median", "centroid", "ward.D2"))
+dot_plot(
+  data.to.plot,
+  size_var = NA,
+  col_var = NA,
+  text_var = NA,
+  shape_var = 16,
+  size_legend = "",
+  col_legend = "",
+  shape_legend = "",
+  cols.use = "default",
+  shape.scale = 12,
+  text.size = NA,
+  shape_use = "default",
+  scale.by = "radius",
+  scale.min = NA,
+  scale.max = NA,
+  plot.legend = TRUE,
+  do.return = FALSE,
+  x.lab.rot = TRUE,
+  x.lab.pos = c("both", "top", "bottom", "none"),
+  y.lab.pos = c("left", "right", "both", "none"),
+  vertical_coloring = NA,
+  horizontal_coloring = NA,
+  size.breaks.number = 4,
+  color.breaks.number = 5,
+  shape.breaks.number = 5,
+  size.breaks.values = NA,
+  color.breaks.values = NA,
+  shape.breaks.values = NA,
+  display_max_sizes = TRUE,
+  transpose = FALSE,
+  dend_x_var = NULL,
+  dend_y_var = NULL,
+  dist_method = c("euclidean", "maximum", "manhattan", "canberra", "binary",
+    "minkowski"),
+  hclust_method = c("ward.D", "single", "complete", "average", "mcquitty", "median",
+    "centroid", "ward.D2")
+)
 }
 \arguments{
 \item{data.to.plot}{Input data. Can be a list or a data.frame.
@@ -71,11 +95,19 @@ If coloring is discrete, default colors are taken from the default ggplot2 palet
 
 \item{horizontal_coloring}{Which color use to color the plot horizontally ? (colors are repeated untill the end of the plot). Setting vertical and horizontal coloring at the same time is not recommended !}
 
-\item{size.breaks.number}{Number of shapes with different size to display in the legend.}
+\item{size.breaks.number}{Number of shapes with different size to display in the legend. Not used if size.breaks.values is not NA.}
 
-\item{color.breaks.number}{Number of labels for the color gradient legend.}
+\item{color.breaks.number}{Number of labels for the color gradient legend. Not used if color.breaks.values is not NA.}
 
-\item{shape.breaks.number}{Number of shapes to display in the legend. Used when shape is controled by a continuous factor only.}
+\item{shape.breaks.number}{Number of shapes to display in the legend. Used when shape is controled by a continuous factor only. Not used if shape.breaks.values is not NA.}
+
+\item{size.breaks.values}{Vector containing numerical labels for the size legend.}
+
+\item{color.breaks.values}{Vector containing numerical labels for continuous color legend.}
+
+\item{shape.breaks.values}{Vector containing numerical labels for continuous shape legend.}
+
+\item{display_max_sizes}{Boolean : Display max shape size behind each shape ? (Default=TRUE)}
 
 \item{transpose}{Reverse x axis and y axis ?}
 
