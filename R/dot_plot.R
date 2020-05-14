@@ -334,6 +334,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
     # x dendrogramm
     
     # For the PCA/MCA/FAMD, we change the factor names in factor_1, factor2 ... to avoid syntax problem
+    if(class(save.data[,1])!="factor"){save.data[,1]=as.factor(save.data[,1])}
     old_levels=levels(save.data[,1])
     save.data[,1]=paste("factor", as.numeric(save.data[,1]), sep="_")
     
@@ -357,6 +358,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
     #y dendrogram
     
     # For the PCA/MCA/FAMD, we change the factor names in factor_1, factor2 ... to avoid syntax problem
+    if(class(save.data[,2])!="factor"){save.data[,2]=as.factor(save.data[,2])}
     old_levels=levels(save.data[,2])
     save.data[,2]=paste("factor",as.numeric(save.data[,2]),sep="_")
     
