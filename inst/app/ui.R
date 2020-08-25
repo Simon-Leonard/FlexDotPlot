@@ -11,12 +11,14 @@ function() {
         )
         ),
       sidebarMenu(id = "tabs",
-                  menuItem("Import Data", tabName = "readData", icon = icon("readme")),
+                  menuItem("App description", tabName="AppDes", icon = icon("book-open")),
+                  menuItem("Import Data", tabName = "readData", icon = icon("arrow-alt-circle-down")),
                   menuItemOutput("viz_panel"),
                   uiOutput("col_panel")
       )
     ),
     dashboardBody(
+      use_bs_tooltip(),
       
       tabItems(
         # Read data
@@ -120,9 +122,7 @@ function() {
                         column(3, uiOutput("shape_leg")),
                         column(3, uiOutput("shape_breaks"))
                       ),
-                      fluidRow(
-                        column(12, span(style = "color:red;", textOutput("shape_warn")))
-                      ),
+
                       fluidRow(
                         column(4, uiOutput("text_var")),
                         column(3, uiOutput("text_size"))
@@ -134,8 +134,14 @@ function() {
                 fluidRow(
                   uiOutput("plot_parameters")
                 ),
-
-                h2("Plot Output"),
+                
+                column(12, conditionalPanel(condition="input.generate_plot_button",checkboxInput("auto_refresh", label = "Autorefesh dotplot")), align="center"),
+                column(12, uiOutput("refresh_button"), align="center"),
+                
+                
+                # h2("Plot Output"),
+                h2(textOutput("plot_output_title")),
+                
                 fluidRow(
                   column(12, plotOutput("output_plot",inline = TRUE))
                 ),

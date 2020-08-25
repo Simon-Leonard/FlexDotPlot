@@ -2,7 +2,6 @@
 
 
 function(input, output, session) {
-
   
   data <- reactiveValues()
   
@@ -26,11 +25,13 @@ function(input, output, session) {
     if(input$example_data == TRUE){
       
       if(input$example_dataset == "PBMC3K_example_data"){
-        data(input$example_dataset)
-        df=PBMC3K_example_data
+        # data(input$example_dataset)
+        df=read.table(paste(system.file("data",package = "FlexDotPlot"), "PBMC3K_example_data.txt", sep="/"),
+                      header=T, sep="\t")
       }else {
-        data(input$example_dataset)
-        df=CBMC8K_example_data
+        # data(input$example_dataset)
+        df=read.table(paste(system.file("data",package = "FlexDotPlot"), "CBMC8k_example_data.txt", sep="/"),
+                      header=T, sep="\t")
       }
       
     }else{
@@ -220,7 +221,7 @@ function(input, output, session) {
     if(input$example_data==FALSE & is.null(input$dataFile)){
       
     }else{
-      actionButton(inputId = "actBtnVisualisation", label = "Visualization",icon = icon("play"), style='font-size:150%; color:green' )
+      actionButton(inputId = "actBtnVisualisation", label = "Visualization",icon = icon("play"), style='font-size:150%; color:green')
     }
   }) 
   
@@ -231,28 +232,56 @@ function(input, output, session) {
   
   # X & Y axis
   output$x_axis <- renderUI({
-    selectInput(inputId="x_axis", label = "x axis", choices=qual_factor(), selected=1)
+    tagList(
+      selectInput(inputId="x_axis", label = "x axis", choices=qual_factor(), selected=1) %>%
+        shinyInput_label_embed(
+          shiny_iconlink("question-circle") %>%
+            bs_embed_tooltip(title = "Choose column to use as x axis values in the dotplot representation", placement = "right", html="true")
+        ),
+      tags$script("$(function () {$('[data-toggle=\"popover\"]').popover()})")
+    )
   })
   
+  # y axis choicies = qualitative factors except the one selected for x axis
   y_axis_choices <- reactive({
-
     req(input$x_axis)
-
     qual_factor()[qual_factor()!=input$x_axis]
   })
 
   output$y_axis <- renderUI({
-    selectInput(inputId="y_axis", label = "y axis", choices=y_axis_choices(), selected=1)
+    tagList(
+      selectInput(inputId="y_axis", label = "y axis", choices=y_axis_choices(), selected=1)%>%
+        shinyInput_label_embed(
+          shiny_iconlink("question-circle") %>%
+            bs_embed_tooltip(title = "Choose column to use as y axis values in the dotplot representation", placement = "right", html="true")
+        ),
+      tags$script("$(function () {$('[data-toggle=\"popover\"]').popover()})")
+    )
   })
   
   
   # Size parameters
   output$size_var <- renderUI({
-    selectInput(inputId="size_var", label = "Column controling shape size", choices=c("Constant size"=NA, quant_factor()), selected=1)
+    tagList(
+      selectInput(inputId="size_var", label = "Column controling shape size", choices=c("Constant size"=NA, quant_factor()), selected=1)%>%
+        shinyInput_label_embed(
+          shiny_iconlink("question-circle") %>%
+            bs_embed_tooltip(title = "Continuous factors only", placement = "right", html="true")
+        ),
+      tags$script("$(function () {$('[data-toggle=\"popover\"]').popover()})")
+    )
+    
   })
   output$size_scale <- renderUI({
-    conditionalPanel(condition = "(input.size_var != 'NA')|(input.col_var != 'NA')|(input.text_var != 'NA')|(input.shape_type!=1)",
-                     numericInput("shape.scale", "Size scale", 12)
+    tagList(
+      conditionalPanel(condition = "(input.size_var != 'NA')|(input.col_var != 'NA')|(input.text_var != 'NA')|(input.shape_type!=1)",
+                       numericInput("shape.scale", "Size scale", 12)%>%
+        shinyInput_label_embed(
+          shiny_iconlink("question-circle") %>%
+            bs_embed_tooltip(title = "Scale the size of the shapes, similar to cex", placement = "right", html="true")
+        ),
+      tags$script("$(function () {$('[data-toggle=\"popover\"]').popover()})")
+      )
     )
     # numericInput("shape.scale", "Size scale", 12)
   })
@@ -262,12 +291,16 @@ function(input, output, session) {
     }
   })
   output$size_breaks <- renderUI({
-    # if(input$size_var!="NA"){
-    #   numericInput("size.breaks.number", "Size breaks number", 4)
-    # }
-    conditionalPanel(condition = "input.size_var != 'NA'",
-                     numericInput("size.breaks.number", "Size breaks number", 4)
-                     )
+    tagList(
+      conditionalPanel(condition = "input.size_var != 'NA'",
+                     numericInput("size.breaks.number", "Size breaks number", value=4, min=2) %>%
+        shinyInput_label_embed(
+          shiny_iconlink("question-circle") %>%
+            bs_embed_tooltip(title = "Number of shapes with different size to display in the legend", placement = "left", html="true")
+        ),
+      tags$script("$(function () {$('[data-toggle=\"popover\"]').popover()})")
+      )
+    )
   })
   
   # Color parameters
@@ -280,11 +313,16 @@ function(input, output, session) {
     }
   })
   output$col_breaks <- renderUI({
-    # if(input$col_var!="NA" & input$col_var %in% quant_factor()){
-    #   numericInput("color.breaks.number", "Color breaks number", 4)
-    # }
-    conditionalPanel(condition = "input.col_var != 'NA'",
-                     numericInput("color.breaks.number", "Color breaks number", 4)
+    tagList(
+          conditionalPanel(condition = "input.col_var != 'NA'",
+                     numericInput("color.breaks.number", "Color breaks number", value=4, min=2) %>%
+        shinyInput_label_embed(
+          shiny_iconlink("question-circle") %>%
+            bs_embed_tooltip(title = "Number of labels for the color gradient legend (when colored are controlled by a continuous factor only)", placement = "left", html="true")
+        ),
+      tags$script("$(function () {$('[data-toggle=\"popover\"]').popover()})")
+    )
+
     )
   })
   
@@ -350,11 +388,35 @@ function(input, output, session) {
   output$shape_type <- renderUI({
     radioButtons("shape_type", label="Shape type", choices=list("Unique"=1,"Controled by a column"=2), selected=1)
   })
+  
+  possible_shape_var=reactive({
+    nb_levels_qual_factor=sapply(qual_factor(), function(x){length(unique(mydata2()[,x]))})
+    possible_qual_factor=qual_factor()[nb_levels_qual_factor<=13]
+    possible_shape_var=data$colnames[data$colnames %in% c(quant_factor(), possible_qual_factor)]
+  })
+  
   output$shape_var <- renderUI({
     if(input$shape_type==1){
-      numericInput("shape_var", "Shape value (pch)", 16)
+      tagList(
+        numericInput("shape_var", "Shape value", 16) %>%
+          shinyInput_label_embed(
+            shiny_iconlink("question-circle") %>%
+              bs_embed_tooltip(title = "Equivalent to pch parameter", placement = "right", html="true")
+          ),
+        tags$script("$(function () {$('[data-toggle=\"popover\"]').popover()})")
+      )
     }else{
-      selectInput(inputId="shape_var", label = "Column controling shape", choices=data$colnames, selected=1)
+      
+      tagList(
+        selectInput(inputId="shape_var", label = "Column controling shape", choices=possible_shape_var(), selected=1)%>%
+          shinyInput_label_embed(
+            shiny_iconlink("question-circle") %>%
+              bs_embed_tooltip(title = "Continuous column or discrete column with less than 13 different values (more than 13 different shapes is not supported in the shiny app).", placement = "right", html="true")
+          ),
+        tags$script("$(function () {$('[data-toggle=\"popover\"]').popover()})")
+      )
+      
+      
     }
   })
   output$shape_leg <- renderUI({
@@ -366,7 +428,14 @@ function(input, output, session) {
   })
   output$shape_breaks <- renderUI({
     if( (input$shape_type==2) & (input$shape_var %in% quant_factor()) ){
-      numericInput("shape.breaks.number", "Shape breaks number", 5)
+      tagList(
+        numericInput("shape.breaks.number", "Shape breaks number", value=5, min=2)%>%
+          shinyInput_label_embed(
+            shiny_iconlink("question-circle") %>%
+              bs_embed_tooltip(title = "Number of shapes to display in the legend. Used when shape is controled by a continuous factor only.", placement = "left", html="true")
+          ),
+        tags$script("$(function () {$('[data-toggle=\"popover\"]').popover()})")
+      )
     }else{
       
     }
@@ -433,60 +502,34 @@ function(input, output, session) {
   })
   
   output$plot_parameters <- renderUI ({
-    # if(all(is.na(c(size_var(),col_var(),text_var()))) & input$shape_type==1){
-    #   NULL # Display nothing if there is no plot
-    # }else{
-    #   box(title = "Plot Parameters",
-    #       status = "primary", solidHeader = TRUE, collapsible = TRUE, width=12,
-    #       fluidRow(
-    #         column(4, radioButtons("plot_legend", label="Display legend ?", choices=list("Yes"=TRUE,"No"=FALSE), selected=TRUE)),
-    #         column(4, radioButtons("x_lab_rot", label="Rotate x labels ?", choices=list("Yes"=TRUE,"No"=FALSE), selected=FALSE))
-    #       ),
-    #       fluidRow(
-    #         column(3, numericInput("plot_height", "Plot height", value=6)),
-    #         column(3, numericInput("plot_width", "Plot width", 6))
-    #       ),
-    #       fluidRow(
-    #         column(6, pickerInput(inputId = "x_dend_picker", label="Column to calculate dendrogramm (x axis)", 
-    #                choices=names(factors())[!names(factors()) %in% c(input$x_axis, input$y_axis)],
-    #                options=list(`actions-box` = TRUE, `selected-text-format` = "count > 3"), multiple=TRUE)
-    #                ),
-    #         column(6, pickerInput(inputId = "y_dend_picker", label="Column to calculate dendrogramm (y axis)", 
-    #                               choices=names(factors())[!names(factors()) %in% c(input$x_axis, input$y_axis)],
-    #                               options=list(`actions-box` = TRUE, `selected-text-format` = "count > 3"), multiple=TRUE)
-    #         )
-    #       ),
-    #       uiOutput("dist_hclust_method")
-    #   )
-    # }
+    # conditionalPanel(condition = "(input.size_var != 'NA')|(input.col_var != 'NA')|(input.text_var != 'NA')|(input.shape_type!=1)",
+    # )
     
-    conditionalPanel(condition = "(input.size_var != 'NA')|(input.col_var != 'NA')|(input.text_var != 'NA')|(input.shape_type!=1)",
-                     box(title = "Plot Parameters",
-                         status = "primary", solidHeader = TRUE, collapsible = TRUE, width=12,
-                         fluidRow(
-                           column(4, radioButtons("plot_legend", label="Display legend ?", choices=list("Yes"=TRUE,"No"=FALSE), selected=TRUE)),
-                           column(4, radioButtons("x_lab_rot", label="Rotate x labels ?", choices=list("Yes"=TRUE,"No"=FALSE), selected=FALSE)),
-                           column(4, selectInput(inputId="x_lab_pos", label = "x label position", 
-                                                 choices=c("bottom"="bottom","top"="top","both"="both","none"="none" ), selected=1)),
-                           column(4, selectInput(inputId="y_lab_pos", label = "y label position", 
-                                                 choices=c("left"="left","right"="right","both"="both","none"="none" ), selected=1))
-                         ),
-                         fluidRow(
-                           column(3, numericInput("plot_height", "Plot height", value=6)),
-                           column(3, numericInput("plot_width", "Plot width", 6))
-                         ),
-                         fluidRow(
-                           column(6, pickerInput(inputId = "x_dend_picker", label="Column to calculate dendrogramm (x axis)", 
-                                                 choices=names(factors())[!names(factors()) %in% c(input$x_axis, input$y_axis)],
-                                                 options=list(`actions-box` = TRUE, `selected-text-format` = "count > 3"), multiple=TRUE)
-                           ),
-                           column(6, pickerInput(inputId = "y_dend_picker", label="Column to calculate dendrogramm (y axis)", 
-                                                 choices=names(factors())[!names(factors()) %in% c(input$x_axis, input$y_axis)],
-                                                 options=list(`actions-box` = TRUE, `selected-text-format` = "count > 3"), multiple=TRUE)
-                           )
-                         ),
-                         uiOutput("dist_hclust_method")
-                     )
+    box(title = "Plot Parameters",
+        status = "primary", solidHeader = TRUE, collapsible = TRUE, width=12,
+        fluidRow(
+          column(4, radioButtons("plot_legend", label="Display legend ?", choices=list("Yes"=TRUE,"No"=FALSE), selected=TRUE)),
+          column(4, radioButtons("x_lab_rot", label="Rotate x labels ?", choices=list("Yes"=TRUE,"No"=FALSE), selected=FALSE)),
+          column(4, selectInput(inputId="x_lab_pos", label = "x label position", 
+                                choices=c("bottom"="bottom","top"="top","both"="both","none"="none" ), selected=1)),
+          column(4, selectInput(inputId="y_lab_pos", label = "y label position", 
+                                choices=c("left"="left","right"="right","both"="both","none"="none" ), selected=1))
+        ),
+        fluidRow(
+          column(3, numericInput("plot_height", "Plot height", value=6)),
+          column(3, numericInput("plot_width", "Plot width", 6))
+        ),
+        fluidRow(
+          column(6, pickerInput(inputId = "x_dend_picker", label="Column to calculate dendrogramm (x axis)", 
+                                choices=names(factors())[!names(factors()) %in% c(input$x_axis, input$y_axis)],
+                                options=list(`actions-box` = TRUE, `selected-text-format` = "count > 3"), multiple=TRUE)
+          ),
+          column(6, pickerInput(inputId = "y_dend_picker", label="Column to calculate dendrogramm (y axis)", 
+                                choices=names(factors())[!names(factors()) %in% c(input$x_axis, input$y_axis)],
+                                options=list(`actions-box` = TRUE, `selected-text-format` = "count > 3"), multiple=TRUE)
+          )
+        ),
+        uiOutput("dist_hclust_method")
     )
 
   })
@@ -499,6 +542,7 @@ function(input, output, session) {
   
   # Download format
   output$down_format <- renderUI({
+    req(input$generate_plot_button)
     # if(all(is.na(c(size_var(),col_var(),text_var()))) & input$shape_type==1){
     #   NULL
     # }else {selectInput(inputId="down_format", label = "File format", choices=c("png"="png", "tiff"="tiff", "eps"="eps", "pdf"="pdf"), selected=1)}
@@ -509,6 +553,7 @@ function(input, output, session) {
   
   #Download bouton
   output$down_bouton <- renderUI({
+    req(input$generate_plot_button)
     if(all(is.na(c(size_var(),col_var(),text_var()))) & input$shape_type==1){
       NULL
     }else {
@@ -542,14 +587,6 @@ function(input, output, session) {
   #=============================================================================
   # Warnings
   #=============================================================================
-  
-  output$shape_warn <- renderText({
-    if(input$shape_var %in% qual_factor()){
-      if (length(unique(mydata2()[,input$shape_var]))>13){
-        "WARNING : The shiny app does not support more than 13 different discrete shapes"
-      } else {NULL}
-    }else{NULL}
-  })
   
   output$xy_warn <- renderText({
     if(max(table(data$table[,input$x_axis],data$table[,input$y_axis])) > 1){
@@ -611,18 +648,52 @@ function(input, output, session) {
     if(input$shape_type==2){input$shape_leg}else{""}
   })
   
-  observe({
-    output$output_plot <- renderPlot({
-      if(!is.null(data$table)){
-        data.to.plot=mydata2()[,c(input$x_axis, input$y_axis, data$colnames)]
-        
-        # Factor level = apparition order
-        data.to.plot[,1]<- factor(data.to.plot[,1], levels = unique(data.to.plot[,1]))
-        data.to.plot[,2]<- factor(data.to.plot[,2], levels = unique(data.to.plot[,2]))
-        
-        data.to.plot <<- data.to.plot # Saving data in environment
-        
-        myplot <<- dot_plot(data.to.plot,
+  
+  output$refresh_button <- renderUI({
+    conditionalPanel(condition="!input.auto_refresh", 
+                     column(12, actionButton("generate_plot_button", label = "Generate/refresh dotplot", style='font-size:150%; color:green'), align="center"))
+  })
+  
+  
+  # myplot <- reactive({
+  #   if(!is.null(data$table)){
+  #     data.to.plot=mydata2()[,c(input$x_axis, input$y_axis, data$colnames)]
+  # 
+  #     # Factor level = apparition order
+  #     data.to.plot[,1]<- factor(data.to.plot[,1], levels = unique(data.to.plot[,1]))
+  #     data.to.plot[,2]<- factor(data.to.plot[,2], levels = unique(data.to.plot[,2]))
+  # 
+  #     data.to.plot <<- data.to.plot # Saving data in environment
+  # 
+  #     myplot <<- dot_plot(data.to.plot,
+  #                         size_var=size_var(),col_var=col_var(), text_var=text_var(),shape_var=input$shape_var,
+  #                         size_legend=input$size_leg, col_legend=input$col_leg, shape_legend=input$shape_leg,
+  #                         cols.use = cols_to_use(), shape.scale = input$shape.scale, text.size=text_size(),
+  #                         scale.by = "radius", scale.min = NA, scale.max = NA, plot.legend = plot_legend(), do.return = TRUE,
+  #                         x.lab.rot = x_lab_rot(), horizontal_coloring=NA,
+  #                         size.breaks.number=size_breaks(), color.breaks.number=col_breaks(), transpose=FALSE,
+  #                         dend_x_var = input$x_dend_picker, dend_y_var = input$y_dend_picker,
+  #                         dist_method = input$dist_method, hclust_method = input$hclust_method,
+  #                         x.lab.pos=input$x_lab_pos, y.lab.pos=input$y_lab_pos, shape.breaks.number = shape_breaks()
+  #     )
+  #     myplot
+  # 
+  #   }else {
+  #     NULL
+  #   }
+  # })
+  
+  output_plot <- eventReactive(input$generate_plot_button, {
+    if(!is.null(data$table) & input$auto_refresh==FALSE){
+      data.to.plot=mydata2()[,c(input$x_axis, input$y_axis, data$colnames)]
+
+      # Factor level = apparition order
+      data.to.plot[,1]<- factor(data.to.plot[,1], levels = unique(data.to.plot[,1]))
+      data.to.plot[,2]<- factor(data.to.plot[,2], levels = unique(data.to.plot[,2]))
+
+      data.to.plot <<- data.to.plot # Saving data in environment
+
+      myplot <<- dot_plot(data.to.plot,
                           size_var=size_var(),col_var=col_var(), text_var=text_var(),shape_var=input$shape_var,
                           size_legend=input$size_leg, col_legend=input$col_leg, shape_legend=input$shape_leg,
                           cols.use = cols_to_use(), shape.scale = input$shape.scale, text.size=text_size(),
@@ -631,17 +702,111 @@ function(input, output, session) {
                           size.breaks.number=size_breaks(), color.breaks.number=col_breaks(), transpose=FALSE,
                           dend_x_var = input$x_dend_picker, dend_y_var = input$y_dend_picker,
                           dist_method = input$dist_method, hclust_method = input$hclust_method,
-                          x.lab.pos=input$x_lab_pos, y.lab.pos=input$y_lab_pos, shape.breaks.number = shape_breaks()
-        )
-        print(myplot)
-        
-      }else {
-        NULL
-      }
-    }, height = ifelse(length(input$plot_height)==0,600,input$plot_height*100), 
-    width = ifelse(length(input$plot_width)==0,600,input$plot_width*100))
-  })
+                          x.lab.pos=input$x_lab_pos, y.lab.pos=input$y_lab_pos, shape.breaks.number = shape_breaks(),
+                          shape_use = c("\u25A0","\u25CF","\u25C6","\u25BA","\u25C4","\u25BC","\u25B2","\u25D8","\u25D9","\u2726", "\u2605", "\u2736", "\u2737")
+      )
+      myplot
 
+    }else {
+      NULL
+    }
+  })
+  
+  plot_heigth <- eventReactive(input$generate_plot_button, {
+    ifelse(length(input$plot_height)==0,600,input$plot_height*100)
+  })
+  
+  plot_width <- eventReactive(input$generate_plot_button, {
+    ifelse(length(input$plot_width)==0,600,input$plot_width*100)
+  })
+  
+  
+  
+  observe({
+    if(input$auto_refresh==FALSE){
+      output$output_plot <- renderPlot({
+        output_plot()
+      }, height = plot_heigth(), width = plot_width())
+    }else {
+      output$output_plot <- renderPlot({
+        if(!is.null(data$table)){
+          data.to.plot=mydata2()[,c(input$x_axis, input$y_axis, data$colnames)]
+
+          # Factor level = apparition order
+          data.to.plot[,1]<- factor(data.to.plot[,1], levels = unique(data.to.plot[,1]))
+          data.to.plot[,2]<- factor(data.to.plot[,2], levels = unique(data.to.plot[,2]))
+
+          data.to.plot <<- data.to.plot # Saving data in environment
+
+          myplot <<- dot_plot(data.to.plot,
+                              size_var=size_var(),col_var=col_var(), text_var=text_var(),shape_var=input$shape_var,
+                              size_legend=input$size_leg, col_legend=input$col_leg, shape_legend=input$shape_leg,
+                              cols.use = cols_to_use(), shape.scale = input$shape.scale, text.size=text_size(),
+                              scale.by = "radius", scale.min = NA, scale.max = NA, plot.legend = plot_legend(), do.return = TRUE,
+                              x.lab.rot = x_lab_rot(), horizontal_coloring=NA,
+                              size.breaks.number=size_breaks(), color.breaks.number=col_breaks(), transpose=FALSE,
+                              dend_x_var = input$x_dend_picker, dend_y_var = input$y_dend_picker,
+                              dist_method = input$dist_method, hclust_method = input$hclust_method,
+                              x.lab.pos=input$x_lab_pos, y.lab.pos=input$y_lab_pos, shape.breaks.number = shape_breaks(),
+                              shape_use = c("\u25A0","\u25CF","\u25C6","\u25BA","\u25C4","\u25BC","\u25B2","\u25D8","\u25D9","\u2726", "\u2605", "\u2736", "\u2737")
+          )
+          print(myplot)
+
+        }else {
+          NULL
+        }
+      }, height = ifelse(length(input$plot_height)==0,600,input$plot_height*100),
+      width = ifelse(length(input$plot_width)==0,600,input$plot_width*100))
+    }
+  })
+  
+  # auto_refresh_plot <- reactive({
+  #   if(!is.null(data$table) & input$auto_refresh){
+  #     data.to.plot=mydata2()[,c(input$x_axis, input$y_axis, data$colnames)]
+  #     # Factor level = apparition order
+  #     data.to.plot[,1]<- factor(data.to.plot[,1], levels = unique(data.to.plot[,1]))
+  #     data.to.plot[,2]<- factor(data.to.plot[,2], levels = unique(data.to.plot[,2]))
+  #     
+  #     data.to.plot <<- data.to.plot # Saving data in environment
+  #     
+  #     myplot <<- dot_plot(data.to.plot,
+  #                         size_var=size_var(),col_var=col_var(), text_var=text_var(),shape_var=input$shape_var,
+  #                         size_legend=input$size_leg, col_legend=input$col_leg, shape_legend=input$shape_leg,
+  #                         cols.use = cols_to_use(), shape.scale = input$shape.scale, text.size=text_size(),
+  #                         scale.by = "radius", scale.min = NA, scale.max = NA, plot.legend = plot_legend(), do.return = TRUE,
+  #                         x.lab.rot = x_lab_rot(), horizontal_coloring=NA,
+  #                         size.breaks.number=size_breaks(), color.breaks.number=col_breaks(), transpose=FALSE,
+  #                         dend_x_var = input$x_dend_picker, dend_y_var = input$y_dend_picker,
+  #                         dist_method = input$dist_method, hclust_method = input$hclust_method,
+  #                         x.lab.pos=input$x_lab_pos, y.lab.pos=input$y_lab_pos, shape.breaks.number = shape_breaks()
+  #     )
+  #     myplot
+  #     
+  #   }else {
+  #     NULL
+  #   }
+  #   })
+  
+  # observe({
+  #   if(input$auto_refresh==FALSE){
+  #     output$output_plot=renderPlot({
+  #       output_plot()
+  #     }, height = plot_heigth(), width = plot_width())
+  #   }else{
+  #     output$output_plot=renderPlot({
+  #       myplot()
+  #     }, height = ifelse(length(input$plot_height)==0,600,input$plot_height*100), 
+  #     width = ifelse(length(input$plot_width)==0,600,input$plot_width*100))
+  #   }
+  # })
+  
+  plot_output_title=eventReactive(input$generate_plot_button, {
+    "Plot Output"
+  })
+  output$plot_output_title=renderText({plot_output_title()})
+  
+  
+  
   #=============================================================================
   # Display executed command
   #=============================================================================
@@ -692,6 +857,7 @@ function(input, output, session) {
  })
   
   output$output_code=renderUI({
+    req(input$generate_plot_button)
     if(all(is.na(c(size_var(),col_var(),text_var()))) & input$shape_type==1){
       NULL # Display nothing if there is no plot
     }else{
