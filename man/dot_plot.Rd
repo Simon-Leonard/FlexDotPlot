@@ -41,7 +41,8 @@ dot_plot(
   dist_method = c("euclidean", "maximum", "manhattan", "canberra", "binary",
     "minkowski"),
   hclust_method = c("ward.D", "single", "complete", "average", "mcquitty", "median",
-    "centroid", "ward.D2")
+    "centroid", "ward.D2"),
+  do.plot = TRUE
 )
 }
 \arguments{
@@ -119,10 +120,12 @@ If coloring is discrete, default colors are taken from the default ggplot2 palet
 
 \item{hclust_method}{The agglomeration method to be used. This must be one of "single", "complete", "average", "mcquitty", "ward.D", "ward.D2", "centroid" or "median".}
 
+\item{do.plot}{Print the plot ? (default=TRUE)}
+
 \item{scale.min/scale.max}{Set lower and upper limits for scaling, use NA for default values.}
 }
 \value{
-Print the plot and return the ggplot object if do.return=TRUE
+Print the plot (if do.plot=TRUE) and return a list containing input data, executed command, resulting dot plot and computed dendrograms (if do.return=TRUE)
 }
 \description{
 Create dotplots to represent two discrete factors (x & y) described by several other factors. Each combination of the two discrete factors (x & y) can be described with : 1 continuous factor (setting shape size), 3 continuous or discrete factors (setting shape type, shape color and text on shape).

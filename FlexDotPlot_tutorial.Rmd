@@ -157,8 +157,8 @@ dot_plot(data.to.plot = PBMC3K_example_data, text_var = "pct.exp2", text.size = 
 A column index or a vector can also be provided 
 ```{r, eval=F}
 # Same results
-dot_plot(data.to.plot = PBMC3K_example_data, col_var = 4, , text.size = 3, shape.scale = 20)
-dot_plot(data.to.plot = PBMC3K_example_data, col_var = PBMC3K_example_data$pct.exp2, , text.size = 3, shape.scale = 20)
+dot_plot(data.to.plot = PBMC3K_example_data, text_var = 4, , text.size = 3, shape.scale = 20)
+dot_plot(data.to.plot = PBMC3K_example_data, text_var = PBMC3K_example_data$pct.exp2, , text.size = 3, shape.scale = 20)
 ```
 
 

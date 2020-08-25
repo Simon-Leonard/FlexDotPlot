@@ -49,8 +49,9 @@
 #' @param dend_y_var A vector containing Column/List indexes or Column/List names to compute the y axis dendrogramm.
 #' @param dist_method The distance measure to be used. This must be one of "euclidean", "maximum", "manhattan", "canberra", "binary" or "minkowski".
 #' @param hclust_method The agglomeration method to be used. This must be one of "single", "complete", "average", "mcquitty", "ward.D", "ward.D2", "centroid" or "median".
+#' @param do.plot Print the plot ? (default=TRUE)
 #' 
-#' @return Print the plot and return the ggplot object if do.return=TRUE
+#' @return Print the plot (if do.plot=TRUE) and return a list containing input data, executed command, resulting dot plot and computed dendrograms (if do.return=TRUE)
 #' @author Simon Leonard - simon_leonard[a]hotmail.fr
 dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_var=16,
                         size_legend="", col_legend="", shape_legend="",
@@ -64,13 +65,17 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
                         transpose=FALSE,
                         dend_x_var=NULL, dend_y_var=NULL, 
                         dist_method=c("euclidean", "maximum", "manhattan", "canberra","binary", "minkowski"),
-                        hclust_method=c("ward.D", "single", "complete", "average", "mcquitty", "median", "centroid", "ward.D2")
+                        hclust_method=c("ward.D", "single", "complete", "average", "mcquitty", "median", "centroid", "ward.D2"),
+                        do.plot=TRUE
                      ){
   
   x.lab.pos=match.arg(x.lab.pos)
   y.lab.pos=match.arg(y.lab.pos)
   
   require(ggplot2)
+  require(sisal)
+  require(scales)
+  
   # If cowplot library is loaded, we have to disable the cowplot default theme and set the ggplot2 default theme
   if("cowplot" %in% (.packages())){theme_set(theme_gray())}
   
@@ -221,14 +226,16 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
     }
   }else{shape=shape_var}
   
-  data.to.plot[,1]=factor(data.to.plot[,1], levels=unique(data.to.plot[,1]))
-  data.to.plot[,2]=factor(data.to.plot[,2], levels=unique(data.to.plot[,2]))
+  data.to.plot[,1]=factor(data.to.plot[,1], levels=levels(as.factor(data.to.plot[,1])))
+  data.to.plot[,2]=factor(data.to.plot[,2], levels=levels(as.factor(data.to.plot[,2])))
   data.to.plot[,5]=as.character(data.to.plot[,5])
   
   if (transpose){
     data.to.plot[,1:2]=data.to.plot[,2:1]
     save.data[,1:2]=save.data[,2:1]
   }
+  
+  
   
   ### 2 Calculate dendrograms ----
   check_FAMD_var=function(FAMD_var,type=c("x","y"), save.data){
@@ -352,6 +359,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
     # Reorder x axis according to dendrogramms
     data.to.plot[,1]<- factor(data.to.plot[,1], 
                               levels = old_levels[as.numeric(gsub("factor_","",hc_x_result$labels[hc_x_result$order]))])
+    save.data[,1]=data.to.plot[,1]
   }else{hc_x_result=NULL}
   
   if(!is.null(dend_y_var)){
@@ -376,6 +384,8 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
     # Reorder y axis according to dendrogramms
     data.to.plot[,2]<- factor(data.to.plot[,2], 
                               levels = old_levels[as.numeric(gsub("factor_","",hc_y_result$labels[hc_y_result$order]))])
+    save.data[,2]=data.to.plot[,2]
+    
   }else{hc_y_result=NULL}
   
   
@@ -386,38 +396,14 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
   
   # Set theme function. Common function between classical dotplot and pacman plot
   # Transparent background, black border, no grid
-  set_background=function(p){
+  set_background=function(p, xlims, ylims, vertical_coloring, horizontal_coloring){
     p <- p + theme(
       panel.background = element_rect(fill="transparent",linetype="solid", color="black"),
       panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-      legend.key = element_rect(colour = NA, fill = NA), axis.ticks = element_blank()) 
-    
-    
-    return(p)
-  }
-  
-  ### 3.1: PACMAN PLOT ----
-  if (is.numeric(shape) & length(shape)==nrow(data.to.plot)){
-    
-    ### 2.1.1 : Main plot ----
-    require(ggforce)
-    
-    # scale shape between 0 and 2*pi
-    if(any(shape<0)){
-      shape_pos=shape-min(na.omit(shape))
-    }else{shape_pos=shape}
-    pacman_opening=shape_pos*2*pi/max(na.omit(shape_pos))
-    
-    # scale size between 0 and 0.4
-    r=data.to.plot[,3]
-    if(any(r<0)){r=r-min(na.omit(r))}
-    r=r*0.4/max(na.omit(r))
-    
-    # ggplot object initialization
-    p <- ggplot()
-    
-    # Set theme
-    p <- set_background(p)
+      legend.key = element_rect(colour = NA, fill = NA), axis.ticks = element_blank(),
+      plot.margin = unit(c(1,1,1,1), "points")
+      ) 
+    p <- p + coord_cartesian(xlim=xlims,ylim=ylims,expand=FALSE, default=T)
     
     # Vertical coloring
     if(any(!is.na(vertical_coloring))){
@@ -427,11 +413,8 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
       # shading$col = rep_len(x=c(NA,"gray80"),length.out=length(unique(data.to.plot[,1]))))
       shading$col=rep(vertical_coloring, length.out=nrow(shading))
       
-      # for (i in 1:nrow(shading)){
-      #   p <- p + geom_rect(xmin = shading$min[i], xmax = shading$max[i],   ymin = -Inf, ymax = Inf,   fill = shading$col[i])
-      # }
       p <- p + annotate(geom = "rect", xmin = shading$min, xmax = shading$max, 
-                        ymin = 0.5, ymax = max(as.numeric(data.to.plot[,2]))+0.5, fill = shading$col)
+                        ymin = 0.5, ymax = max(as.numeric(data.to.plot[,2]))+0.5, fill = shading$col, col="black")
       
       # Adding black lines to delimitate shades
       # We use another annotate to not display first and last line; otherwise add colour="black" in the previous annotate
@@ -448,11 +431,8 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
       # shading$col = rep_len(x=c(NA,"gray80"),length.out=length(unique(data.to.plot[,2])))
       shading$col=rep(horizontal_coloring, length.out=nrow(shading))
       
-      # for (i in 1:nrow(shading)){
-      #   p <- p + geom_rect(ymin = shading$min[i], ymax = shading$max[i],   xmin = -Inf, xmax = Inf,   fill = shading$col[i])
-      # }
       p <- p + annotate(geom = "rect", xmin=0.5,xmax=max(as.numeric(data.to.plot[,1]))+0.5, ymin = shading$min, ymax = shading$max,
-                        fill = shading$col)
+                        fill = shading$col, col="black")
       
       # Adding black lines to delimitate shades
       # We use another annotate to not display first and last line; otherwise add colour="black" in the previous annotate
@@ -461,38 +441,59 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
                         colour = "black")
     }
     
-    # Display pacman
-    p <- p + geom_arc_bar(aes(x0 = as.numeric(data.to.plot[,1]), y0 = as.numeric(data.to.plot[,2]), r0 = 0, r = r, start = 0,
-                              end = pacman_opening, fill = data.to.plot[,4]))
-    # Pacman coloring
+    return(p)
+  }
+  
+  get_shape_colors=function(data.to.plot, cols.use="default", color.breaks.values, color.breaks.number){
+    # Functions wich define a color of each data.to.plot row according to the 4th column
+    # Return a list containing :
+    #   $palette : used color palette
+    #   $colors : color of each row
+    #   $labels : labels for legend (continuous color only)
+    #   $breaks : legend breaks (continuous color only)
+    
+    
+    shape_colors_labels=list()
+    
     if (is.numeric(data.to.plot[,4])){
       if (length(x = cols.use) == 1) {
-        cols.use=c(cols.use,cols.use)# Monochrome
+        shape_colors_labels$colors=rep(cols.use, nrow(data.to.plot)) # Monochrome
       }
       
       if (!(all(is.na(color.breaks.values)))){
         if(all(is.numeric(color.breaks.values))){
           cat("\n Putting color.breaks.values in color legend")
-          color_breaks=color.breaks.values
+          shape_colors_labels$breaks=color.breaks.values
         }else{
           cat("\n Non numeric value in color.breaks.values, considering color.breaks.number instead")
-          color_breaks=(seq(min(na.omit(data.to.plot[,4])),max(na.omit(data.to.plot[,4])), length.out=color.breaks.number))
+          shape_colors_labels$breaks=(seq(min(na.omit(data.to.plot[,4])),max(na.omit(data.to.plot[,4])), length.out=color.breaks.number))
         }
       }else{
-        color_breaks=(seq(min(na.omit(data.to.plot[,4])),max(na.omit(data.to.plot[,4])), length.out=color.breaks.number))
+        shape_colors_labels$breaks=(seq(min(na.omit(data.to.plot[,4])),max(na.omit(data.to.plot[,4])), length.out=color.breaks.number))
       }
       
-      color_labels=ifelse((abs(color_breaks)<1e-2 | abs(color_breaks)>1e2) & color_breaks!=0,
-                          format(color_breaks, scientific=TRUE, digits=3),
-                          round(color_breaks,2)) # Values <1e-3 or >1e3 (excepted 0), are displayed with scientific notation
+      color_breaks=shape_colors_labels$breaks
+      shape_colors_labels$labels=ifelse((abs(color_breaks)<1e-2 | abs(color_breaks)>1e2) & color_breaks!=0,
+                                       format(color_breaks, scientific=TRUE, digits=3),
+                                       round(color_breaks,2)) # Values <1e-3 or >1e3 (excepted 0), are displayed with scientific notation
       
-      if (length(x = cols.use) == 2){
-        p <- p + scale_fill_gradient(low = cols.use[1], high = cols.use[2],
-                                     breaks=color_breaks, labels=color_labels) # Gradient from the first color to the second
-      } else {
-        p <- p + scale_fill_gradientn(colours=cols.use, breaks=color_breaks, labels=color_labels)
+      map2color<-function(x,pal,limits=NULL){
+        if(is.null(limits)) limits=range(x)
+        pal[findInterval(x,seq(limits[1],limits[2],length.out=length(pal)+1), all.inside=TRUE)]
       }
+      
+      shape_colors_labels$colors=map2color(data.to.plot[,4], pal=colorRampPalette(cols.use)(100))
+      
+      # if (length(x = cols.use) == 2){
+      #   p <- p + scale_fill_gradient(low = cols.use[1], high = cols.use[2],
+      #                                breaks=color_breaks, labels=color_labels) # Gradient from the first color to the second
+      # } else {
+      #   p <- p + scale_fill_gradientn(colours=cols.use, breaks=color_breaks, labels=color_labels)
+      # }
+      
+      
     } else {
+      # discrete colors
       if(all(cols.use !="default")){
         if (length(cols.use)>length(unique(data.to.plot[,4]))){
           cols.use=cols.use[1:length(unique(data.to.plot[,4]))]
@@ -501,27 +502,126 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
           cols.use=rep_len(cols.use, length.out = length(unique(data.to.plot[,4])))
           cat(paste("\n The number of colors is lower than the modality number. Re-using colors"))
         }
-        p <- p + scale_fill_manual(values = cols.use)
+        
+        # p <- p + scale_fill_manual(values = cols.use)
       }
+      else{
+        #reproducing ggplot2 default discrete palette
+        gg_color_hue <- function(n) {
+          hues = seq(15, 375, length = n + 1)
+          hcl(h = hues, l = 65, c = 100)[1:n]
+        }
+        
+        cols.use=gg_color_hue(length(unique(data.to.plot[,4])))
+        
+      }
+      
+      shape_colors_labels$colors=cols.use[as.factor(data.to.plot[,4])]
+      shape_colors_labels$labels=levels(as.factor(data.to.plot[,4]))
+      
     }
-
-
+    
+    shape_colors_labels$palette=cols.use
+    
+    return(shape_colors_labels)
+  }
+  
+  get_legend<-function(myggplot){
+    tmp <- ggplot_gtable(ggplot_build(myggplot))
+    leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+    legend <- tmp$grobs[[leg]]
+    return(legend)
+  }
+  
+  #Need to specify xlims and ylims of plot - this lets us calculate the normalised plot coordinates
+  xlims <- c(0.5,length(unique(data.to.plot[,1]))+0.5)
+  ylims <- c(0.5,length(unique(data.to.plot[,2]))+0.5)
+  
+  
+  
+  ### 3.1: PACMAN PLOT ----
+  if (is.numeric(shape) & length(shape)==nrow(data.to.plot)){
+    
+    ### 2.1.1 : Main plot ----
+    # require(ggforce)
+    require(grImport2)
+    
+    # Import pie chart pictures
+    pie_chart_files=list.files(path=system.file("SVG",package = "FlexDotPlot"), full.names = T)
+    pie_chart_files=pie_chart_files[order(nchar(pie_chart_files), pie_chart_files)]
+    pie_charts=lapply(pie_chart_files, readPicture)
+    
+    # scale shape between 0 and 2*pi
+    if(any(shape<0)){
+      shape_pos=shape-min(na.omit(shape))
+    }else{shape_pos=shape}
+    pacman_opening=shape_pos*2*pi/max(na.omit(shape_pos))
+    
+    # Create index to assign each pacman opening to one pie chart picture
+    pacman_opening=as.numeric(cut(pacman_opening, breaks = seq(0,2*pi,length.out = 101), labels=1:100, include.lowest = T))
+    
+    # scale size between 0 and 1
+    r=data.to.plot[,3]
+    if(any(r<0)){r=r-min(na.omit(r))}
+    # r=r*0.4/max(na.omit(r))
+    r=r/max(na.omit(r))
+    
+    # ggplot object initialization
+    p <- ggplot(data.to.plot,aes(x = as.numeric(data.to.plot[,1]), y=as.numeric(data.to.plot[,2])))
+    
+    # Set theme
+    p <- set_background(p, xlims, ylims, vertical_coloring, horizontal_coloring)
+    
+    # Assign color to each point
+    pacman_colors=get_shape_colors(data.to.plot, cols.use, color.breaks.values, color.breaks.number)
+    
+    # Display pacman colors (for color legend)
+    # p <- p + geom_point(aes(color=data.to.plot[,4]), size=(-1)) + guides(colour = guide_legend(override.aes = list(size=4)))
+    if (is.numeric(data.to.plot[,4])){
+      p <- p + geom_point(aes(fill=data.to.plot[,4]), size=(-1))
+      p <- p + scale_fill_gradientn(colors=pacman_colors$palette, breaks=pacman_colors$breaks, labels=pacman_colors$labels)
+      p <- p + labs(fill=col_legend)
+    }else{
+      p <- p + geom_point(aes(color=data.to.plot[,4]), size=(-1)) + guides(colour = guide_legend(override.aes = list(size=4)))
+      p <- p + scale_color_manual(values = pacman_colors$palette)
+      p <- p + labs(col=col_legend)
+    }
+    
+    
+    # Get legend
+    col_leg=get_legend(p)
+    
+    
+    # Assign picharts
+    gp_color=lapply(1:nrow(data.to.plot),function(X){
+      inter_gp_color=function(x,color=pacman_colors$colors[X]){
+        # if("col" %in% names(x)){x$col=color}
+        if("fill" %in% names(x)){x$fill=color}
+        x
+        
+      }
+    })
+    sym.grob=lapply(1:nrow(data.to.plot), function(x){symbolsGrob(pie_charts[[pacman_opening[x]]],
+                                                       x=rescale(as.numeric(data.to.plot[x,1]),from=xlims),
+                                                       y=rescale(as.numeric(data.to.plot[x,2]),from=ylims),
+                                                       default.units="npc", gpFUN = gp_color[[x]],
+                                                       size=unit(r[x]*0.08*shape.scale/max(c(length(unique(data.to.plot[,1])),length(unique(data.to.plot[,2])))), "npc"))})
+    
+    #Display pacman
+    # p <- p + geom_arc_bar(aes(x0 = as.numeric(data.to.plot[,1]), y0 = as.numeric(data.to.plot[,2]), r0 = 0, r = r, start = 0,
+    #                           end = pacman_opening, fill = data.to.plot[,4]))
+    p <- p + lapply(sym.grob, annotation_custom)+
+      coord_cartesian(xlim=xlims,ylim=ylims,expand=FALSE, default = T)
     
     # Displaying text
     p <- p + geom_text(mapping = aes(x = as.numeric(data.to.plot[,1]), y = as.numeric(data.to.plot[,2]), label=data.to.plot[,5]), size=text.size)
     
-    # Set discrete labels in the y axis - MOVED to common part (2.3)
-    # p <- p + scale_y_continuous(breaks = 1:length(levels(data.to.plot[,2])),
-    #                             labels = levels(data.to.plot[,2]))
     
-    #Fill legend title
-    p <- p + labs(fill=col_legend)
     
-    # Remove fill legend
-    # p <- p + guides(fill=F)
-    
-    ### 2.1.2 : Legend plot inside the pacman plot ----
+    ### 2.1.2 : Pacman shape and size legend ----
     if (plot.legend){
+      
+      ### 2.1.2.1 : Pacman legend ----
 
       # Set pacman labels
       if (!(all(is.na(shape.breaks.values)))){
@@ -541,11 +641,60 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
                          round(ori_labels,2)) # Values <1e-3 or >1e3 (excepted 0), are displayed with scientific notation
       
       pacman_breaks=length(ori_labels)
-      x_pacman_leg=max(as.numeric(data.to.plot[,1]))+1.5
-      y_pacman_leg=0:(pacman_breaks-1)
+      
+      if(pacman_breaks>(length(unique(data.to.plot[,2]))-1)){stop(paste("To much shape breaks (considering the column which controls y axis labels, max value for this dataset is ",(length(unique(data.to.plot[,2]))-1),
+                                                                        "). Use a lower shape.breaks.number or decrease the length of shape.breaks.values", sep=""))}
+      
+      
+      #Scale between 0 and 2pi :
+      pacman_opening=ori_labels*2*pi/max(na.omit(shape_pos))
+      
+      # Create index to assign each pacman opening to one pie chart picture
+      pacman_opening=as.numeric(cut(pacman_opening, breaks = seq(0,2*pi,length.out = 101), labels=1:100, include.lowest = T))
+      
+      pacman_legend_data=data.frame(pic=pacman_opening, size=1, label=cust_labels)
+      
+      sym.grob=lapply(1:nrow(pacman_legend_data), function(x){
+        if(is.na(pacman_legend_data$label[x])){
+          # grob()
+        }else{
+          symbolsGrob(pie_charts[[pacman_legend_data$pic[x]]],
+                      x=0.5,
+                      y=1-rescale(x,from=ylims),
+                      default.units="npc",
+                      size=pacman_legend_data$size[x]*0.08*8*shape.scale/max(c(length(unique(data.to.plot[,1])),length(unique(data.to.plot[,2])))))
+        }
+      })
+
+      
+      
+      sym.grob <- ggplot() + lapply(sym.grob, annotation_custom) + theme_void()
+      
+      
+      #fill free space with empty labels
+      if(nrow(pacman_legend_data) < (length(unique(data.to.plot[,2]))-1)){
+        nb_empty_plots=(length(unique(data.to.plot[,2]))-1)-nrow(pacman_legend_data)
+        pacman_legend_data=rbind(pacman_legend_data, data.frame(pic=rep(100,nb_empty_plots),
+                                                                size=rep(1, nb_empty_plots),
+                                                                label=""))
+      }
+      
+      
+      # Generate legend labels grobs
+      pacman_labels_grob=textGrob(pacman_legend_data$label, gp = gpar(fontsize = 10), x=0.3, 
+                                  y=1-rescale(1:nrow(pacman_legend_data),from=ylims))
+      
+      #Concatenante all the legend grobs + Add legend title
+      shape_leg=arrangeGrob(textGrob(shape_legend, gp = gpar(fontsize = 12)),
+                            sym.grob, pacman_labels_grob,
+                            layout_matrix = rbind(c(1,1),c(2,3)), heights = c(1, length(unique(data.to.plot[,2]))))
+
+      
+      
+      
+      ### 2.1.2.2 : Size Legend ----
       
       if (!all(is.na(size_var))){
-        
         if (!(all(is.na(size.breaks.values)))){
           if(all(is.numeric(size.breaks.values))){
             cat("\n Putting size.breaks.values in size legend")
@@ -556,7 +705,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
             rrr=size.breaks.values
             if(any(rrr<0)){rrr=rrr-min(na.omit(rrr))}
             
-            legend_breaks=rrr*0.4/max(na.omit(rr))
+            legend_breaks=rrr*0.1/max(na.omit(rr))
             legend_ori=size.breaks.values
             size.breaks.number=length(size.breaks.values)
           }else{
@@ -574,116 +723,68 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
                            format(legend_ori, scientific=TRUE, digits=3),
                            round(legend_ori,2)) # Values <1e-3 or >1e3 (excepted 0), are displayed with scientific notation
         
-        if(pacman_breaks+size.breaks.number+1<=max(as.numeric(data.to.plot[,2]))){
-          x_size_leg=max(as.numeric(data.to.plot[,1]))+1.5
-          y_size_leg=(max(y_pacman_leg)+1.5):(max(y_pacman_leg)+size.breaks.number+0.5)
-          
-          y_size_leg=y_size_leg+mean(as.numeric(data.to.plot[,2]))-mean(c(y_size_leg,y_pacman_leg))
-          y_pacman_leg=y_pacman_leg+mean(as.numeric(data.to.plot[,2]))-mean(c(y_size_leg,y_pacman_leg))
-          
-        }else{
-          x_size_leg=max(as.numeric(data.to.plot[,1]))+4
-          y_size_leg=1:size.breaks.number
-          
-          # Transform y_coord to center the legend according y-axis
-          y_size_leg=y_size_leg+mean(as.numeric(data.to.plot[,2]))-mean(y_size_leg)
-          y_pacman_leg=y_pacman_leg+mean(as.numeric(data.to.plot[,2]))-mean(y_pacman_leg)
-        }
-        y_coord=c(y_pacman_leg, y_size_leg)
-        x_coord=c(rep(x_pacman_leg,pacman_breaks),rep(x_size_leg,size.breaks.number))
-        labels_leg=c(cust_labels,size_labels)
+        if(size.breaks.number>(length(unique(data.to.plot[,2]))-1)){stop(paste("To much size breaks (considering the column which controls y axis labels, max value for this dataset is ",(length(unique(data.to.plot[,2]))-1),
+                                                                          "). Use a lower size.breaks.number or decrease the length of size.breaks.values", sep=""))}
         
-        # p <- p + geom_arc_bar(aes(x0 = x_coord, y0 = y_coord, r0 = 0, r = c(rep(0.4,pacman_breaks),legend_breaks),
-        #                           start = 0, end = c(seq(0,2*pi,length.out = pacman_breaks),rep(2*pi, size.breaks.number))))
-        p <- p + geom_arc_bar(aes(x0 = x_coord, y0 = y_coord, r0 = 0, r = c(rep(0.4,pacman_breaks),legend_breaks),
-                                  start = 0, end = c(ori_labels*2*pi/max(na.omit(shape_pos)),rep(2*pi, size.breaks.number))))
-        p <- p + annotate(geom = "text", x = x_coord+1, y = y_coord, label=labels_leg)
-        p <- p + annotate(geom="text", x = c(x_pacman_leg,x_size_leg), y = c(max(y_pacman_leg),max(y_size_leg))+1, 
-                          label=c(shape_legend,size_legend))
+        size_legend_data=data.frame(pic=100, size=legend_breaks, label=size_labels)
+        
+        
+        # Generate grobs + add legend labels
+        sym.grob=lapply(1:nrow(size_legend_data), function(x){
+          if(is.na(size_legend_data$label[x])){
+            # grob()
+          }else{
+            symbolsGrob(pie_charts[[size_legend_data$pic[x]]],
+                        x=0.5,
+                        y=1-rescale(x,from=ylims),
+                        default.units="npc",
+                        size=size_legend_data$size[x]*0.08*8*shape.scale/max(c(length(unique(data.to.plot[,1])),length(unique(data.to.plot[,2])))))
+          }
+        })
+        
+        sym.grob <- ggplot() + lapply(sym.grob, annotation_custom) + theme_void()
+        
+        #fill free space with empty pictures
+        if(nrow(size_legend_data) < (length(unique(data.to.plot[,2]))-1)){
+          nb_empty_plots=(length(unique(data.to.plot[,2]))-1)-nrow(size_legend_data)
+          size_legend_data=rbind(size_legend_data, data.frame(pic=rep(100,nb_empty_plots),
+                                                                  size=rep(1, nb_empty_plots),
+                                                                  label=NA))
+        }
+
+        
+        size_legend_data$label[is.na(size_legend_data$label)]=""
+        # size_labels_grobs=dynTextGrob(size_legend_data$label, y=seq(0.95,0.05, length.out = nrow(size_legend_data)), width=0.4)
+        size_labels_grobs=textGrob(size_legend_data$label, 
+                                   y=1-rescale(1:nrow(pacman_legend_data),from=ylims), 
+                                   x=0.3, gp = gpar(fontsize = 10))
+
+                
+        #Concatenante all the legend grobs + Add legend title
+        # size_leg=arrangeGrob(dynTextGrob(size_legend, width=0.8), sym.grob, size_labels_grobs, layout_matrix = rbind(c(1,1),c(2,3)), heights = c(1, nrow(size_legend_data)))
+        size_leg=arrangeGrob(textGrob(size_legend, gp = gpar(fontsize = 12)), sym.grob, size_labels_grobs, layout_matrix = rbind(c(1,1),c(2,3)), 
+                             heights = c(1, length(unique(data.to.plot[,2]))))
         
       }else{
-        x_coord=x_pacman_leg
-        # Transform y_pacman_leg to center the legend according y-axis
-        y_pacman_leg=y_pacman_leg+mean(as.numeric(data.to.plot[,2]))-mean(y_pacman_leg)
-        
-        p <- p + geom_arc_bar(aes(x0 = x_pacman_leg, y0 = y_pacman_leg, 
-                                  r0 = 0, r = 0.4, start = 0,end = ori_labels*2*pi/max(na.omit(shape_pos))), size=0.5)
-        p <- p + annotate(geom = "text", x = x_pacman_leg+1, y = y_pacman_leg, label=cust_labels)
-        p <- p + annotate(geom="text", x = x_pacman_leg, y = max(y_pacman_leg)+1, label=shape_legend)
+        # size_leg=NULL
       }
 
     } # End plot legend
     
-    # if(x.lab.rot){
-    #   p <- p + theme(axis.text.x.bottom = element_text(hjust=1), axis.text.x.top = element_text(hjust=0))
-    # }else{
-    #   vjust=5
-    #   p <- p + theme(axis.text.x.bottom = element_text(vjust=vjust), axis.text.x.top = element_text(vjust=-vjust)) 
-    # }
-    
-    
   } # End PACMAN plot
+  
   
   
   ### 3.2: DOT PLOT ----
   else{
+    
     # ggplot object initilization
     p <- ggplot(mapping = aes(x = as.numeric(data.to.plot[,1]), y = as.numeric(data.to.plot[,2]), label=data.to.plot[,5]))
     
     # theme function
-    p <- set_background(p)
-    
-    # Vertical coloring
-    if(any(!is.na(vertical_coloring))){
-      
-      shading <- data.frame(min = c(0.5,seq(from = 1.5, to = max(as.numeric(as.factor(data.to.plot[,1]))), by = 1)),
-                            max = c(seq(from = 1.5, to = max(as.numeric(as.factor(data.to.plot[,1]))) + 0.5, by = 1) ))
-      # shading$col = rep_len(x=c(NA,"gray80"),length.out=length(unique(data.to.plot[,1]))))
-      shading$col=rep(vertical_coloring, length.out=nrow(shading))
-      
-      for (i in 1:nrow(shading)){
-        p <- p + geom_rect(xmin = shading$min[i], xmax = shading$max[i], 
-                           ymin = 0.5, ymax = max(as.numeric(data.to.plot[,2]))+0.5,   fill = shading$col[i])
-      }
-      
-      # p <- p + annotate(geom = "rect", xmin = shading$min, xmax = shading$max, ymin = -Inf, ymax = Inf,alpha = 0.1,
-      #                   fill = shading$col) # Deprecated, on utilise geom_rect a la place
-      # Adding black lines to delimitate shades
-      # We use another annotate to not display first and last line; otherwise add colour="black" in the previous annotate
-      p <- p + annotate(geom = "segment", x = c(shading$min[-1], shading$max[-length(shading$max)]),
-                        xend = c(shading$min[-1], shading$max[-length(shading$max)]),
-                        y = 0.5, yend = max(as.numeric(data.to.plot[,2]))+0.5,
-                        colour = "black")
-    }
-    
-    # Horizontal coloring
-    if(any(!is.na(horizontal_coloring))){
-      shading <- data.frame(min = seq(from = 0.5, to = max(as.numeric(as.factor(data.to.plot[,2]))), by = 1),
-                            max = seq(from = 1.5, to = max(as.numeric(as.factor(data.to.plot[,2]))) + 0.5, by = 1))
-      # shading$col = rep_len(x=c(NA,"gray80"),length.out=length(unique(data.to.plot[,2])))
-      shading$col=rep(horizontal_coloring, length.out=nrow(shading))
-      
-      for (i in 1:nrow(shading)){
-        p <- p + geom_rect(ymin = shading$min[i], ymax = shading$max[i],   
-                           xmin=0.5,xmax=max(as.numeric(data.to.plot[,1]))+0.5,   fill = shading$col[i])
-      }
-      
-      # p <- p + annotate(geom = "rect", xmin = -Inf, xmax = Inf, ymin = shading$min, ymax = shading$max,alpha = 0.1,
-      #                   fill = shading$col) # Deprecated, on utilise geom_rect a la place
-      # Adding black lines to delimitate shades
-      # We use another annotate to not display first and last line; otherwise add colour="black" in the previous annotate
-      p <- p + annotate(geom = "segment", x = 0.5,xend = max(as.numeric(data.to.plot[,1]))+0.5, y = c(shading$min[-1], shading$max[-length(shading$max)]),
-                        yend = c(shading$min[-1], shading$max[-length(shading$max)]),
-                        colour = "black")
-    }
+    p <- set_background(p, xlims, ylims, vertical_coloring, horizontal_coloring)
     
     plot_point=TRUE
-    # if (length(size_var)==1 & length(col_var)==1){
-    #   if(is.na(size_var) & is.na(col_var)){
-    #     plot_point=FALSE
-    #   }
-    # }
-    
     if(plot_point){
       # Displaying shapes
       if(length(shape)==1){
@@ -745,44 +846,13 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
       # /!\ It is important to no set the minimal range value to 0 (and >0.1) because its can induce shape size and position errors with specific shapes
       
       # Coloring shapes
+      # Assign color to each point
+      plot_colors=get_shape_colors(data.to.plot, cols.use, color.breaks.values, color.breaks.number)
+      # Display colors
       if (is.numeric(data.to.plot[,4])){
-        if (length(x = cols.use) == 1) {
-          cols.use=c(cols.use,cols.use)# Monochrome
-        }
-        
-        if (!(all(is.na(color.breaks.values)))){
-          if(all(is.numeric(color.breaks.values))){
-            cat("\n Putting color.breaks.values in color legend")
-            color_breaks=color.breaks.values
-          }else{
-            cat("\n Non numeric value in color.breaks.values, considering color.breaks.number instead")
-            color_breaks=(seq(min(na.omit(data.to.plot[,4])),max(na.omit(data.to.plot[,4])), length.out=color.breaks.number))
-          }
-        }else{
-          color_breaks=(seq(min(na.omit(data.to.plot[,4])),max(na.omit(data.to.plot[,4])), length.out=color.breaks.number))
-        }
-        
-        color_labels=ifelse((abs(color_breaks)<1e-2 | abs(color_breaks)>1e2) & color_breaks!=0, 
-                            format(color_breaks, scientific=TRUE, digits=3), 
-                            round(color_breaks,2)) # Values <1e-3 or >1e3 (excepted 0), are displayed with scientific notation
-        
-        if (length(x = cols.use) == 2){
-          p <- p + scale_color_gradient(low = cols.use[1], high = cols.use[2], 
-                                        breaks=color_breaks, labels=color_labels) # Gradient from one color to an other
-        } else {
-          p <- p + scale_color_gradientn(colours=cols.use, breaks=color_breaks, labels=color_labels)
-        }
-      } else {
-        if(all(cols.use !="default")){
-          if (length(cols.use)>length(unique(data.to.plot[,4]))){
-            cols.use=cols.use[1:length(unique(data.to.plot[,4]))]
-            cat(paste("\n To much colors are supplied. Only the first",length(unique(data.to.plot[,4])),"are used"))
-          } else if (length(cols.use)<length(unique(data.to.plot[,4]))){
-            cols.use=rep_len(cols.use, length.out = length(unique(data.to.plot[,4])))
-            cat(paste("\n The number of colors is lower than the modality number. Re-using colors"))
-          }
-          p <- p + scale_color_manual(values = cols.use)
-        }
+        p <- p + scale_color_gradientn(colors=plot_colors$palette, breaks=plot_colors$breaks, labels=plot_colors$labels)
+      }else{
+        p <- p + scale_color_manual(values = plot_colors$palette)
       }
       
     }
@@ -793,6 +863,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
   }
   
   
+  
   ### 3.3: Command lignes in common ----
   
   # Legend titles
@@ -800,206 +871,251 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
   p$labels$colour=col_legend
   p$labels$shape=shape_legend
   
+  # Deleting axis labels (printed in an other grob)
+  p <- p + scale_y_continuous(breaks = NULL,labels = NULL) + scale_x_continuous(breaks = NULL,labels = NULL)
+  
+  # Deleting axis titles
+  p <- p + theme(axis.title.x = element_blank(), axis.title.y = element_blank())
+  
   # Remove panel border wich contain plot and legend
   p <- p + theme(panel.background = element_rect(fill="transparent",linetype=0))
   
   # Add panel border which contain plot only (legend outside) => /!\ It adds an additional margin in dotplot (not in pacman plot)
   p <- p + geom_rect(aes(xmin=0.5,xmax=max(as.numeric(data.to.plot[,1]))+0.5,ymin=0.5,ymax=max(as.numeric(data.to.plot[,2]))+0.5),
                      alpha=0, colour="black")
-  
-  # Displaying x axis labels and y axis
-  if(x.lab.pos %in% c("top","bottom")){
-    p <- p + scale_x_continuous(breaks = 1:length(levels(data.to.plot[,1])),labels = levels(data.to.plot[,1]),
-                                position = x.lab.pos)
-  }else if (x.lab.pos == "both"){
-    p <- p + scale_x_continuous(breaks = 1:length(levels(data.to.plot[,1])),labels = levels(data.to.plot[,1]),
-                                sec.axis = dup_axis())
-  }else if (x.lab.pos == "none"){
-    p <- p + scale_x_continuous(breaks = NULL,labels = NULL)
-  }
-  
-  if(y.lab.pos %in% c("left","right")){
-    p <- p + scale_y_continuous(breaks = 1:length(levels(data.to.plot[,2])),
-                                labels = levels(data.to.plot[,2]), position=y.lab.pos)
-  }else if (y.lab.pos == "both"){
-    p <- p + scale_y_continuous(breaks = 1:length(levels(data.to.plot[,2])),
-                                labels = levels(data.to.plot[,2]), sec.axis = dup_axis())
-  }else if (y.lab.pos == "none"){
-    p <- p + scale_y_continuous(breaks = NULL,labels = NULL)
-  }
-  
 
+  # Remove legend (printed in another grob)
+  dot_plot_legend=get_legend(p)
+  p <- p + theme(legend.position = "none")
   
-  # Deleting axis titles
-  p <- p + theme(axis.title.x = element_blank(), axis.title.y = element_blank())
   
-  # No display legend if true
-  if (!plot.legend) {
-    p <- p + theme(legend.position = "none")
+  
+  ### 4: Arrange plot with labels, dendrogramms and legends ----
+  final.plot.list=list()
+  
+  # Plot number description : 
+  # 1 : Horizontal dendrogram
+  # 2 : Top x labels
+  # 3 : Vertical dendrogram
+  # 4 : Left y labels
+  # 5 : Dotplot
+  # 6 : Right y labels
+  # 7 : Size legend
+  # 8 : Shape legend
+  # 9 : Color legend
+  # 10 : Bottom x labels
+  
+  layout=rbind(c(NA,NA,1,NA,NA,NA,NA),
+               c(NA,NA,2,NA,NA,NA,NA),
+               c(3,4,5,6,7,8,9),
+               c(NA,NA,10,NA,NA,NA,NA))
+  
+  widths=c(1,3,10,3,2,2,2)
+  heigths=c(1,3,10,3)
+  
+  
+  ### 4.1 Axis Labels ----
+  
+  x_coords=rescale(x = 1:length(levels(data.to.plot[,1])), to = c(0,1), from=c(0.5,length(levels(data.to.plot[,1]))+0.5))
+  if(x.lab.pos == "top"){
+    if(!x.lab.rot){heigths[2]=heigths[2]/length(levels(data.to.plot[,1]))}
+    heigths[4]=0
+    final.plot.list[[2]]=dynTextGrob(levels(data.to.plot[,1]), x=x_coords, rot=ifelse(x.lab.rot, 90, 0),
+                                     just="bottom", y=0.05, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))))
+    final.plot.list[[10]]=grob()
+  }else if (x.lab.pos=="bottom"){
+    heigths[2]=0
+    if(!x.lab.rot){heigths[4]=heigths[4]/length(levels(data.to.plot[,1]))}
+    final.plot.list[[2]]=grob()
+    final.plot.list[[10]]=dynTextGrob(levels(data.to.plot[,1]), x=x_coords, rot=ifelse(x.lab.rot, 90, 0),
+                                      just="top", y=0.95, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))))
+  }else if (x.lab.pos == "both"){
+    final.plot.list[[2]]=dynTextGrob(levels(data.to.plot[,1]), x=x_coords, rot=ifelse(x.lab.rot, 90, 0),
+                                     just="bottom", y=0.05, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))))
+    final.plot.list[[10]]=dynTextGrob(levels(data.to.plot[,1]), x=x_coords, rot=ifelse(x.lab.rot, 90, 0),
+                                      just="top", y=0.95, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))))
+    if(!x.lab.rot){heigths[c(2,4)]=heigths[c(2,4)]/length(levels(data.to.plot[,1]))}
+  }else if (x.lab.pos == "none"){
+    heigths[c(2,4)]=0
+    final.plot.list[[2]]=grob()
+    final.plot.list[[10]]=grob()
   }
   
-  # No color legend if true
-  if(no_color_legend){
-    p <- p+guides(colour=F, fill=F)
+  y_coords=rescale(x = seq(1, length(levels(data.to.plot[,2]))), to = c(0,1), from=c(0.5,length(levels(data.to.plot[,2]))+0.5))
+  if(y.lab.pos == "left"){
+    widths[4]=0
+    final.plot.list[[4]]=dynTextGrob(levels(data.to.plot[,2]), x=0.95, y=y_coords, width=0.95,
+                                     just="right", adjustJust = F)
+    final.plot.list[[6]]=grob()
+  }else if (y.lab.pos=="right"){
+    widths[2]=0
+    final.plot.list[[4]]=grob()
+    final.plot.list[[6]]=dynTextGrob(levels(data.to.plot[,2]), x=0.05, y=y_coords,  width=0.95,
+                                     just="left")
+  }else if (y.lab.pos == "both"){
+    final.plot.list[[4]]=dynTextGrob(levels(data.to.plot[,2]), x=0.95, y=y_coords, width=0.95,
+                                     just="right", adjustJust = F)
+    final.plot.list[[6]]=dynTextGrob(levels(data.to.plot[,2]), x=0.05, y=y_coords,  width=0.95,
+                                     just="left")
+  }else if (y.lab.pos == "none"){
+    widths[c(2,4)]=0
+    final.plot.list[[4]]=grob()
+    final.plot.list[[6]]=grob()
   }
-  # No size legend if true
-  if(no_size_legend){
-    p <- p+guides(size=F)
-  }
   
   
-  # Rotate x-axis labels if TRUE
-  if (x.lab.rot) {
-    p <- p + theme(axis.text.x.bottom = element_text(angle=90, hjust=1, vjust = 0.5), 
-                   axis.text.x.top = element_text(angle=90, hjust=0, vjust = 0.5))
-  }
   
-  
-  ### 3: Output ----
-  
+  ### 4.2 Dendrogramms ----
   # Arrange dotplot with dendrogramms
-  theme_dendro <- theme(
-    # panel.border = element_rect(linetype = "dashed", colour = "black", fill=NA),
-    plot.margin=unit(c(0, 0, 0, 0), "in"),
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank(),
-    axis.title = element_blank(),
-    axis.text = element_blank(),
-    axis.ticks = element_blank(),
-    axis.line = element_blank())
+  
+  remove_geom <- function(ggplot2_object, geom_type) {
+    # Delete layers that match the requested type.
+    layers <- lapply(ggplot2_object$layers, function(x) {
+      if (class(x$geom)[1] %in% geom_type) {
+        NULL
+      } else {
+        x
+      }
+    })
+    # Delete the unwanted layers.
+    layers <- layers[!sapply(layers, is.null)]
+    ggplot2_object$layers <- layers
+    ggplot2_object
+  }
+  
+  p_raw=remove_geom(p, c("GeomCustomAnn","GeomPoint","GeomRect","GeomText","GeomSegment"))
   
   if(!is.null(hc_x_result)){
     # Arrange x dendrogram
     ddata_x <- ggdendro::segment(dendro_data(hc_x_result))
-    dendro_horizontal <- 
-      ggplot(ddata_x) + 
-      geom_segment(aes(x=x, y=y, xend=xend, yend=yend))  + theme_dendro
     
-    # If pacman plot, adjust xlim to not overlap with legend plot
-    if(is.numeric(shape) & length(shape)==nrow(data.to.plot)){
-      if(plot.legend){
-        dendro_horizontal <- dendro_horizontal + xlim(1-0.4,max(x_pacman_leg,x_coord)+0.75)
-      }else {
-        dendro_horizontal <- dendro_horizontal + xlim(1-0.4,length(levels(data.to.plot[,1]))+0.4)
-      }
-    } else {
-      # If dot plot, adjust xlim to panel border
-      dendro_horizontal <- dendro_horizontal + xlim(0.5,max(as.numeric(data.to.plot[,1]))+0.5)
-      
-    }
+    dendro_horizontal <- p_raw + geom_segment(data = ddata_x, mapping = aes(x=x,xend=xend, 
+                                                                          y=y,yend=yend, label=NULL))
     
-    
-    
-    AlignPlots <- function(...) {
-      # https://stackoverflow.com/a/30414008
-      
-      LegendWidth <- function(x) x$grobs[[8]]$grobs[[1]]$widths[[4]]
-      
-      plots.grobs <- lapply(list(...), ggplotGrob)
-      
-      ##Original command lines
-      # max.widths <- do.call(unit.pmax, lapply(plots.grobs, "[[", "widths"))
-      # plots.grobs.eq.widths <- lapply(plots.grobs, function(x) {
-      #   x$widths <- max.widths
-      #   x
-      # })
-      
-      # Custom command lines : Reference widths = dotplot widths (second list element)
-      plots.grobs.eq.widths <- lapply(plots.grobs, function(x) {
-        x$widths <- plots.grobs[[2]]$widths
-        x
-      })
-      # End custom command lines
-      
-      legends.widths <- lapply(plots.grobs, LegendWidth)
-      max.legends.width <- do.call(max, legends.widths)
-      plots.grobs.eq.widths.aligned <- lapply(plots.grobs.eq.widths, function(x) {
-        if (is.gtable(x$grobs[[8]])) {
-          x$grobs[[8]] <- gtable_add_cols(x$grobs[[8]],
-                                          unit(abs(diff(c(LegendWidth(x),
-                                                          max.legends.width))),
-                                               "mm"))
-        }
-        x
-      })
-      
-      plots.grobs.eq.widths.aligned
-    }
-    plots <- AlignPlots(dendro_horizontal,p)
+    dendro_horizontal <- dendro_horizontal+coord_cartesian(ylim = c(min(c(ddata_x$y,ddata_x$yend)),
+                                                                    max(c(ddata_x$y,ddata_x$yend))),
+                                                           xlim=c(0.5,length(unique(data.to.plot[,1]))+0.5),
+                                                           expand=F, default = T)+ theme(plot.margin = unit(c(2,0,0,0), units = "points"))
   }
   
   if(!is.null(hc_y_result)){
     # Arrange y dendrogram
     ddata_y <- ggdendro::segment(dendro_data(hc_y_result))
-    dendro_vertical <- 
-      ggplot(ddata_y) + 
-      geom_segment(aes(x=x, y=y, xend=xend, yend=yend)) +
-      coord_flip()+ scale_y_reverse() + theme_dendro
     
-    if(is.numeric(shape) & length(shape)==nrow(data.to.plot)){
-      # If pacman plot, change dendrogramm xlim
-      dendro_vertical <- dendro_vertical + xlim(1-0.4,length(levels(data.to.plot[,2]))+0.4)
-    } else {
-      # If dotplot, adjust xlim to panel border
-      dendro_vertical <- dendro_vertical + xlim(0.5,max(as.numeric(data.to.plot[,2]))+0.5)
-    }
+    dendro_vertical <- p_raw + geom_segment(data = ddata_y, mapping = aes(x=length(unique(data.to.plot[,2]))+0.5-y,
+                                                                            xend=length(unique(data.to.plot[,2]))+0.5-yend, 
+                                                                            y=x,yend=xend, label=NULL))
     
-    # For vertical dendrogramm, we adjust heigths instead of widths
-    # https://stackoverflow.com/a/30414008
-    dotplot_grobs=ggplotGrob(p)
-    y_dendro_grobs=ggplotGrob(dendro_vertical)
-    
-    plots.grobs <- list(y_dendro_grobs,dotplot_grobs)
-    plot.grobs <- list(dotplot_grobs)
-    
-    ##Original command lines
-    # max.heights <- do.call(unit.pmax, lapply(plots.grobs, "[[", "heights"))
-    # plots.grobs.eq.heights <- lapply(plots.grobs, function(x) {
-    #   x$heights <- max.heights
-    #   x
-    # })
-    
-    # Custom command lines : Reference heights = dotplot heights
-    plots.grobs.eq.heights <- lapply(plots.grobs, function(x) {
-      x$heights <- plots.grobs[[2]]$heights
-      x
-    })
-    # End Custom command lines
-    
-    LegendHeight <- function(x) x$grobs[[8]]$grobs[[1]]$heights[[4]]
-    legends.heights <- lapply(plots.grobs, LegendHeight)
-    max.legends.height <- do.call(max, legends.heights)
-    plots.grobs.eq.heights.aligned <- lapply(plots.grobs.eq.heights, function(x) {
-      if (is.gtable(x$grobs[[8]])) {
-        x$grobs[[8]] <- gtable_add_cols(x$grobs[[8]],
-                                        unit(abs(diff(c(LegendHeight(x),
-                                                        max.legends.height))),
-                                             "mm"))
-      }
-      x
-    })
-    
+    dendro_vertical <- dendro_vertical+coord_cartesian(xlim = range(c(length(unique(data.to.plot[,2]))+0.5-ddata_y$y,length(unique(data.to.plot[,2]))+0.5-ddata_y$yend)),
+                                                           ylim=c(0.5,length(unique(data.to.plot[,2]))+0.5),
+                                                           expand=F, default = T) + theme(plot.margin = unit(c(0,0,0,2), units = "points"))
   }
+  
   
   if(!is.null(hc_x_result) & !is.null(hc_y_result)){
-    #display dotplot and both dendrograms
-    final_plot <- grid.arrange(grob(),plots[[1]],plots.grobs.eq.heights.aligned[[1]],plots[[2]], ncol=2, widths=c(1,5), heights=c(1,5))
+    
+    final.plot.list[[1]]=dendro_horizontal
+    final.plot.list[[3]]=dendro_vertical
+    final.plot.list[[5]]=p
+    
+    
   } else if (!is.null(hc_x_result)){
-    #display dotplot and horizontal dendrogram only
-    final_plot <- grid.arrange(plots[[1]],plots[[2]], ncol=1, heights=c(1,5))
+    
+    final.plot.list[[1]]=dendro_horizontal
+    final.plot.list[[3]]=grob()
+    final.plot.list[[5]]=p
+    
+    widths[1]=0
+    
   } else if (!is.null(hc_y_result)){
-    #display dotplot and vertical dendrogram only
-    final_plot <- grid.arrange(plots.grobs.eq.heights.aligned[[1]],plots.grobs.eq.heights.aligned[[2]], ncol=2, widths=c(1,5))
-  }else {
-    #display dotplot only
-    final_plot <- p
-    plot(final_plot)
+    
+    final.plot.list[[1]]=grob()
+    final.plot.list[[3]]=dendro_vertical
+    final.plot.list[[5]]=p
+    
+    heigths[1]=0
+    
+  } else {
+    
+    final.plot.list[[1]]=grob()
+    final.plot.list[[3]]=grob()
+    final.plot.list[[5]]=p
+    
+    heigths[1]=0
+    widths[1]=0
+    
   }
   
   
+  ### 4.3 Legends ----
+  # 7 : Size legend
+  # 8 : Shape legend
+  # 9 : Color legend
+  
+  if (plot.legend){
+    
+    if(is.numeric(shape) & length(shape)==nrow(data.to.plot) & plot.legend){
+      #pacman plot
+      
+      # size legend
+      if(!no_size_legend){
+        final.plot.list[[7]]=size_leg
+      }else{
+        final.plot.list[[7]]=grob()
+        widths[5]=0
+      }
+      
+      # shape legend
+      if(length(shape)==nrow(data.to.plot)){
+        final.plot.list[[8]]=shape_leg
+      }else{
+        final.plot.list[[8]]=grob()
+        widths[6]=0
+      }
+      
+      # color legend
+      if(!no_color_legend){
+        final.plot.list[[9]]=col_leg
+      }else{
+        final.plot.list[[9]]=grob()
+        widths[7]=0
+      }
+      
+    } else {
+      final.plot.list[[7]]=dot_plot_legend
+      final.plot.list[[8]]=grob()
+      final.plot.list[[9]]=grob()
+      widths[6:7]=0
+    }
+
+    
+    
+  }else{
+    final.plot.list[[7]]=grob()
+    final.plot.list[[8]]=grob()
+    final.plot.list[[9]]=grob()
+    widths[5:7]=0
+  }
+
+  
+  ### 4.4 Render plot ----
+  # return(final.plot.list) # for debug
+  
+  final_plot=arrangeGrob(grobs = final.plot.list, layout_matrix = layout, widths = widths, heights = heigths)
+
+  if(do.plot){
+    grid.arrange(final_plot)
+  }
   if (do.return) {
-    return(final_plot)
+    final_output=list()
+    final_output[["input_data"]]=save.data
+    final_output[["command"]]=sys.calls()[[1]]
+    final_output[["plot"]]=final_plot
+    if(!is.null(hc_y_result)){final_output[["dendrogram_y"]]=as.dendrogram(hc_y_result)}else{final_output[["dendrogram_y"]]=NULL}
+    if(!is.null(hc_x_result)){final_output[["dendrogram_x"]]=as.dendrogram(hc_x_result)}else{final_output[["dendrogram_x"]]=NULL}
+    if(!is.null(hc_y_result) | !is.null(hc_x_result)){final_output[["raw_dend_ggplot"]]=p_raw}
+    
+    return(final_output)
   }
   
   ### End function ----
