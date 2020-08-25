@@ -21,6 +21,22 @@ function() {
       use_bs_tooltip(),
       
       tabItems(
+        
+        #Desc panel
+        tabItem(tabName="AppDes",
+                h3("Welcome to the FlexDotPlot Shiny App"),
+                h5("Use the 'Import Data' panel (at the left) to :"),
+                tags$ul(
+                  tags$li("Import your dataset or select an example dataset"),
+                  tags$li("Choose import parameters"),
+                  tags$li("Control/change column types (quantitative or qualitative")
+                ),
+                h5("Then, you can press the 'Visualization' button to go to the 'Visualize data' panel. 
+                   This panel allows you to set all the plot parameters  and visualize the resulting dotplot.
+                   Once a dotplot is generated, a new box with export parameters will appear between the parameters boxes and the plot")
+                
+        ),
+        
         # Read data
         tabItem(tabName = "readData",
                 h1("Import Data"),
