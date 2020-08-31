@@ -26,6 +26,8 @@ dot_plot(
   x.lab.rot = TRUE,
   x.lab.pos = c("both", "top", "bottom", "none"),
   y.lab.pos = c("left", "right", "both", "none"),
+  x.lab.size.factor = 1,
+  y.lab.size.factor = 1,
   vertical_coloring = NA,
   horizontal_coloring = NA,
   size.breaks.number = 4,
@@ -91,6 +93,10 @@ If coloring is discrete, default colors are taken from the default ggplot2 palet
 \item{x.lab.pos}{Where to display x axis labels. This must be one of "bottom","top","both" or "none".}
 
 \item{y.lab.pos}{Where to display y axis labels. This must be one of "left","right","both"or "none".}
+
+\item{x.lab.size.factor}{Factor resizing x-axis labels (default=1)}
+
+\item{y.lab.size.factor}{Factor resizing y-axis labels (default=1)}
 
 \item{vertical_coloring}{Which color use to color the plot vertically ? (colors are repeated untill the end of the plot). Setting vertical and horizontal coloring at the same time is not recommended !}
 

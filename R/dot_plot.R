@@ -32,6 +32,8 @@
 #' @param x.lab.pos Where to display x axis labels. This must be one of "bottom","top","both" or "none".
 #' @param y.lab.pos Where to display y axis labels. This must be one of "left","right","both"or "none".
 #' @param x.lab.rot Rotate x-axis labels ?
+#' @param x.lab.size.factor Factor resizing x-axis labels (default=1)
+#' @param y.lab.size.factor Factor resizing y-axis labels (default=1)
 #' @param shape_var If numeric = Similar to pch : square=15; circle=16; triangle=17. Can also be a column/element name or a vector of the same size than the input dataset.
 #' @param shape_use Shapes to uses (only when shape is controled by a discrete factor). Default shapes : \\u25A0 \\u25CF \\u25C6 \\u2BC8 \\u2BC7 \\u2BC6 \\u2BC5 \\u25D8 \\u25D9 \\u2726  \\u2605 \\u2736 \\u2737.
 #' @param shape_legend Name of the shape legend if shape_var is a vector.
@@ -58,6 +60,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
                         cols.use = "default", shape.scale = 12, text.size=NA,  shape_use="default",
                         scale.by = "radius", scale.min = NA, scale.max = NA, plot.legend = TRUE, do.return = FALSE, 
                         x.lab.rot = TRUE, x.lab.pos=c("both","top","bottom","none"), y.lab.pos=c("left","right","both","none"),
+                        x.lab.size.factor=1, y.lab.size.factor=1,
                         vertical_coloring=NA, horizontal_coloring=NA, 
                         size.breaks.number=4, color.breaks.number=5, shape.breaks.number=5,
                         size.breaks.values=NA, color.breaks.values=NA, shape.breaks.values=NA,
@@ -910,8 +913,9 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
                c(3,4,5,6,7,8,9),
                c(NA,NA,10,NA,NA,NA,NA))
   
-  widths=c(1,3,10,3,2,2,2)
-  heigths=c(1,3,10,3)
+  widths=c(1,3*y.lab.size.factor,10,3*y.lab.size.factor,2,2,2)
+  x_lab_heights=ifelse(x.lab.rot, 3*x.lab.size.factor, 3)
+  heigths=c(1,x_lab_heights,10,x_lab_heights)
   
   
   ### 4.1 Axis Labels ----
@@ -921,19 +925,19 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
     if(!x.lab.rot){heigths[2]=heigths[2]/length(levels(data.to.plot[,1]))}
     heigths[4]=0
     final.plot.list[[2]]=dynTextGrob(levels(data.to.plot[,1]), x=x_coords, rot=ifelse(x.lab.rot, 90, 0),
-                                     just="bottom", y=0.05, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))))
+                                     just="bottom", y=0.05, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))* x.lab.size.factor))
     final.plot.list[[10]]=grob()
   }else if (x.lab.pos=="bottom"){
     heigths[2]=0
     if(!x.lab.rot){heigths[4]=heigths[4]/length(levels(data.to.plot[,1]))}
     final.plot.list[[2]]=grob()
     final.plot.list[[10]]=dynTextGrob(levels(data.to.plot[,1]), x=x_coords, rot=ifelse(x.lab.rot, 90, 0),
-                                      just="top", y=0.95, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))))
+                                      just="top", y=0.95, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))* x.lab.size.factor))
   }else if (x.lab.pos == "both"){
     final.plot.list[[2]]=dynTextGrob(levels(data.to.plot[,1]), x=x_coords, rot=ifelse(x.lab.rot, 90, 0),
-                                     just="bottom", y=0.05, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))))
+                                     just="bottom", y=0.05, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))* x.lab.size.factor))
     final.plot.list[[10]]=dynTextGrob(levels(data.to.plot[,1]), x=x_coords, rot=ifelse(x.lab.rot, 90, 0),
-                                      just="top", y=0.95, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))))
+                                      just="top", y=0.95, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))* x.lab.size.factor))
     if(!x.lab.rot){heigths[c(2,4)]=heigths[c(2,4)]/length(levels(data.to.plot[,1]))}
   }else if (x.lab.pos == "none"){
     heigths[c(2,4)]=0
