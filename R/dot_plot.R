@@ -913,7 +913,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
                c(3,4,5,6,7,8,9),
                c(NA,NA,10,NA,NA,NA,NA))
   
-  widths=c(1,3*y.lab.size.factor,10,3*y.lab.size.factor,2,2,2)
+  widths=c(1,3*y.lab.size.factor,10,3*y.lab.size.factor,3,3,3)
   x_lab_heights=ifelse(x.lab.rot, 3*x.lab.size.factor, 3)
   heigths=c(1,x_lab_heights,10,x_lab_heights)
   
@@ -999,7 +999,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
     dendro_horizontal <- dendro_horizontal+coord_cartesian(ylim = c(min(c(ddata_x$y,ddata_x$yend)),
                                                                     max(c(ddata_x$y,ddata_x$yend))),
                                                            xlim=c(0.5,length(unique(data.to.plot[,1]))+0.5),
-                                                           expand=F, default = T)+ theme(plot.margin = unit(c(2,0,0,0), units = "points"))
+                                                           expand=F, default = T)+ theme(plot.margin = unit(c(2,0,2,0), units = "points"))
   }
   
   if(!is.null(hc_y_result)){
