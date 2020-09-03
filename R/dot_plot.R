@@ -404,7 +404,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
       panel.background = element_rect(fill="transparent",linetype="solid", color="black"),
       panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
       legend.key = element_rect(colour = NA, fill = NA), axis.ticks = element_blank(),
-      plot.margin = unit(c(1,1,1,1), "points")
+      # plot.margin = unit(c(1,1,1,1), "points")
       ) 
     p <- p + coord_cartesian(xlim=xlims,ylim=ylims,expand=FALSE, default=T)
     
