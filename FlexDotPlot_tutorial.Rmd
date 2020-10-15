@@ -349,6 +349,7 @@ Shiny_dot_plot()
 
 ## Reproduce the article figure 
 
+Full script to generate dotplot input can be found at : https://github.com/Simon-Leonard/FlexDotPlot/blob/master/example/DotPlot_CBMC_dataset.html
 
 ```{r}
 ### Import data + create the exp.type column

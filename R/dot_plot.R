@@ -38,6 +38,7 @@
 #' @param shape_use Shapes to uses (only when shape is controled by a discrete factor). Default shapes : \\u25A0 \\u25CF \\u25C6 \\u2BC8 \\u2BC7 \\u2BC6 \\u2BC5 \\u25D8 \\u25D9 \\u2726  \\u2605 \\u2736 \\u2737.
 #' @param shape_legend Name of the shape legend if shape_var is a vector.
 #' @param text.size Size of text to display on the shapes.
+#' @param text.vjust Vertical justification of text to display on the shapes. Default value = 0, which mean no justification. Recommended value is between -0.5 and 0.5.
 #' @param vertical_coloring Which color use to color the plot vertically ? (colors are repeated untill the end of the plot). Setting vertical and horizontal coloring at the same time is not recommended !
 #' @param horizontal_coloring Which color use to color the plot horizontally ? (colors are repeated untill the end of the plot). Setting vertical and horizontal coloring at the same time is not recommended !
 #' @param size.breaks.number Number of shapes with different size to display in the legend. Not used if size.breaks.values is not NA.
@@ -57,7 +58,9 @@
 #' @author Simon Leonard - simon_leonard[a]hotmail.fr
 dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_var=16,
                         size_legend="", col_legend="", shape_legend="",
-                        cols.use = "default", shape.scale = 12, text.size=NA,  shape_use="default",
+                        cols.use = "default",
+                        text.size=NA,  text.vjust=0,
+                        shape_use="default", shape.scale = 12,
                         scale.by = "radius", scale.min = NA, scale.max = NA, plot.legend = TRUE, do.return = FALSE, 
                         x.lab.rot = TRUE, x.lab.pos=c("both","top","bottom","none"), y.lab.pos=c("left","right","both","none"),
                         x.lab.size.factor=1, y.lab.size.factor=1,
@@ -617,7 +620,9 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
       coord_cartesian(xlim=xlims,ylim=ylims,expand=FALSE, default = T)
     
     # Displaying text
-    p <- p + geom_text(mapping = aes(x = as.numeric(data.to.plot[,1]), y = as.numeric(data.to.plot[,2]), label=data.to.plot[,5]), size=text.size)
+    p <- p + geom_text(mapping = aes(x = as.numeric(data.to.plot[,1]), y = as.numeric(data.to.plot[,2]) + text.vjust, 
+                                     label=data.to.plot[,5]), 
+                       size=text.size)
     
     
     
@@ -861,7 +866,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
     }
     
     # Displaying text
-    p <- p + geom_text(size=text.size)
+    p <- p + geom_text(aes(y = as.numeric(data.to.plot[,2]) + text.vjust), size=text.size)
     
   }
   

@@ -15,9 +15,10 @@ dot_plot(
   col_legend = "",
   shape_legend = "",
   cols.use = "default",
-  shape.scale = 12,
   text.size = NA,
+  text.vjust = 0,
   shape_use = "default",
+  shape.scale = 12,
   scale.by = "radius",
   scale.min = NA,
   scale.max = NA,
@@ -76,11 +77,13 @@ Set to NA if you don't want to add text.}
 If coloring is continuous, default colors are taken from a "lightgrey" to "blue" gradient.
 If coloring is discrete, default colors are taken from the default ggplot2 palette.}
 
-\item{shape.scale}{Scale the size of the shapes, similar to cex.}
-
 \item{text.size}{Size of text to display on the shapes.}
 
+\item{text.vjust}{Vertical justification of text to display on the shapes. Default value = 0, which mean no justification. Recommended value is between -0.5 and 0.5.}
+
 \item{shape_use}{Shapes to uses (only when shape is controled by a discrete factor). Default shapes : \\u25A0 \\u25CF \\u25C6 \\u2BC8 \\u2BC7 \\u2BC6 \\u2BC5 \\u25D8 \\u25D9 \\u2726  \\u2605 \\u2736 \\u2737.}
+
+\item{shape.scale}{Scale the size of the shapes, similar to cex.}
 
 \item{scale.by}{Scale the size by size or radius.}
 
