@@ -14,6 +14,7 @@ library(infercnv)
 library(reshape2)
 library(biomaRt)
 library(Seurat)
+library(ggplot2)
 ```
 
 ## Compute InferCNV data
@@ -33,7 +34,7 @@ infercnv_obj = CreateInfercnvObject(raw_counts_matrix=system.file("extdata", "ol
 
 infercnv_obj = infercnv::run(infercnv_obj,
                              cutoff=1, # cutoff=1 works well for Smart-seq2, and cutoff=0.1 works well for 10x Genomics
-                             out_dir="InferCNV_example_output", 
+                             out_dir="output", 
                              cluster_by_groups=TRUE, 
                              denoise=TRUE,
                              HMM=TRUE)
@@ -45,11 +46,11 @@ infercnv_obj = infercnv::run(infercnv_obj,
 #### Import InferCNV score output
 
 ```{r}
-e=read.table("InferCNV_example_output/infercnv.observations.txt", header=T, row.names = 1)
+e=read.table("E:/Scripts_DEPRECATED/Infer_cnv_example_dataset/output_subclusters/infercnv.observations.txt", header=T, row.names = 1)
 
 include_ref=T
 if (include_ref){
-  ref=read.table("InferCNV_example_output/infercnv.references.txt", header=T, row.names = 1)
+  ref=read.table("E:/Scripts_DEPRECATED/Infer_cnv_example_dataset/output_subclusters/infercnv.references.txt", header=T, row.names = 1)
   e=cbind(e,ref)
 }
 
@@ -132,7 +133,7 @@ Link to download the dataset : https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?ac
 
 
 ```{r}
-expr=read.table("E:/Scripts/Infer_cnv_example_dataset/GSE70630_OG_processed_data_v2.txt", header=T, row.names = 1)
+expr=read.table("E:/Scripts_DEPRECATED/Infer_cnv_example_dataset/GSE70630_OG_processed_data_v2.txt", header=T, row.names = 1)
 
 #restric to cells and gene from example infercnv dataset
 expr=expr[rownames(e),colnames(e)]
@@ -163,6 +164,7 @@ seurat$type[colnames(infercnv_obj@expr.data)[infercnv_obj@reference_grouped_cell
 seurat$type[colnames(infercnv_obj@expr.data)[infercnv_obj@reference_grouped_cell_indices$`Oligodendrocytes (non-malignant)`]]="Oligodendrocytes (non malignant)"
 
 seurat$malignant=ifelse(seurat$type %in% c("Microglia/Macrophage","Oligodendrocytes (non malignant)"), "non malignant","malignant")
+DotPlot(seurat, features = genes, group.by = "type")+scale_colour_gradientn(colours=c("blue","white","red", "darkred"))+theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 d=DotPlot(seurat, features = genes, group.by = "type")$data
 d=cbind(d[,c(4,3)], d[,c(1,2,5)])
 ```
@@ -193,9 +195,19 @@ Perform DotPlot
 
 ```{r message=FALSE, warning=FALSE, fig.width= 14, fig.height=6}
 library(FlexDotPlot)
-dot_plot(d, size_var = "pct.exp", 
-         col_var = "avg.exp.scaled", cols.use = c("blue","white","red", "darkred"),
+dotplot=dot_plot(d, size_var = "pct.exp", size.breaks.number = 5,
+         col_var = "avg.exp.scaled", cols.use = c("blue","white","red", "darkred"), color.breaks.values = c(-1,0,1),
          shape_var = "cnv_status", shape_use = c( "\u2BC5", "\u25CF", "\u2BC6"), 
          x.lab.pos = "bottom", transpose = T, y.lab.size.factor = 0.3,
-         dend_x_var = c("avg.exp.scaled","pct.exp"), dend_y_var = c("avg.exp.scaled","pct.exp"))
+         dend_x_var = c("avg.exp.scaled","pct.exp"), dend_y_var = c("avg.exp.scaled","pct.exp"), do.return = T)
+```
+## Dotplot with Seurat (without cnv status) and same gene/sample ordering
+```{r}
+seurat$type=factor(seurat$type, levels=dotplot$plot$grobs[[4]]$label)
+DotPlot(seurat, features = dotplot$plot$grobs[[10]]$label, group.by = "type")+scale_colour_gradientn(colours=c("blue","white","red", "darkred"))+theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+```
+
+## Session Info
+```{r}
+sessionInfo()
 ```

@@ -14,11 +14,12 @@ https://satijalab.org/seurat/v3.2/visualization_vignette.html
 
 ## Libraries
 
-```{r}
+```{r warning=F, message=F}
 library(Seurat)
 library(ggplot2)
 library(plyr)
 library(devtools)
+library(SeuratData)
 
 ```
 
@@ -26,44 +27,29 @@ library(devtools)
 ## Get CBMC data
 Inspired from cbmc.SeuratData package - https://github.com/satijalab/seurat-data
 
-```{r}
-rna.url <- 'ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE100nnn/GSE100866/suppl/GSE100866_CBMC_8K_13AB_10X-RNA_umi.csv.gz'
-curl::curl_download(url = rna.url, destfile = basename(path = rna.url))
-cbmc.rna <- Seurat::as.sparse(x = read.csv(file = basename(path = rna.url), header = TRUE, sep = ',', row.names = 1))
-cbmc.rna <- Seurat::CollapseSpeciesExpressionMatrix(object = cbmc.rna)
-adt.url <- 'ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE100nnn/GSE100866/suppl/GSE100866_CBMC_8K_13AB_10X-ADT_umi.csv.gz'
-curl::curl_download(url = adt.url, destfile = basename(path = adt.url))
-cbmc.adt <- Seurat::as.sparse(x = read.csv(file = basename(path = adt.url), header = TRUE, sep = ',', row.names = 1))
-# cbmc.adt <- cbmc.adt[setdiff(x = rownames(x = cbmc.adt), y = c('CCR5', 'CCR7', 'CD10')), ]
-cbmc <- Seurat::CreateSeuratObject(counts = cbmc.rna, project = 'cbmc')
-cbmc[['ADT']] <- Seurat::CreateAssayObject(counts = cbmc.adt)
-# Annotations come from Seurat's multimodal vignette
-# https://satijalab.org/seurat/v3.0/multimodal_vignette.html
-annotations <- readRDS(file = system.file('extdata/annotations/annotations.Rds', package = 'cbmc.SeuratData'))
-cbmc <- Seurat::AddMetaData(object = cbmc, metadata = annotations)
-# Clean up download files
-file.remove(basename(path = c(rna.url, adt.url)))
+```{r warning=F, message=F}
+# InstallData("cbmc")
+data("cbmc")
 
-rm(annotations, cbmc.adt, cbmc.rna, adt.url, rna.url)
 ```
 
 ## Filter Data 
-```{r}
+```{r warning=F, message=F}
 Idents(cbmc)="rna_annotations"
-cbmc=subset(cbmc, idents=unique(Idents(cbmc)[!Idents(cbmc) %in% c("Eryth", "Mouse","Multiplets","T/Mono doublets")]))
+cbmc=subset(cbmc, idents=c("Eryth", "Mouse","Multiplets","T/Mono doublets"), invert=T)
 
 cbmc <- NormalizeData(cbmc, assay = "ADT", normalization.method = "CLR")
 cbmc <- ScaleData(cbmc, assay = "ADT")
 
 rownames(cbmc@assays$ADT@data)=revalue(rownames(cbmc@assays$ADT@data), c(CD3="CD3E", CD8="CD8A", CD45RA="PTPRC", CD56="NCAM1", 
-                                                                         CD16="FCGR3A", CD11c="ITGAX", CD10="MME"))
+                                                                         CD16="FCGR3A", CD11c="ITGAX"))
 ```
 
 
 
 ## Get Seurat DotPlot data
 ```{r message=FALSE, warning=FALSE, fig.width=8}
-selected_features=rownames(cbmc@assays$ADT@data)[!rownames(cbmc@assays$ADT@data) %in% c("MME")]
+selected_features=rownames(cbmc@assays$ADT@data)
 
 dotplot_adt=DotPlot(cbmc, assay = "ADT", features = selected_features) + ggtitle("Antibody_expression")
 dotplot_rna=DotPlot(cbmc, assay = "RNA", features = selected_features) + ggtitle("RNA_expression")
@@ -73,12 +59,12 @@ dotplot_rna=DotPlot(cbmc, assay = "RNA", features = selected_features) + ggtitle
 
 ## Set antibodies expression cutoff  + calculate percentage of cells with adt expression above cutoff
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 for (i in selected_features){
   print(VlnPlot(cbmc, assay ="ADT", features = i, pt.size = 0, group.by = "orig.ident") + scale_y_continuous(breaks = seq(0,4,0.25)))
 }
 
-cutoffs=data.frame(adt=selected_features, cutoff=c(1,1,1,0.5,1,1,1,0.5,1,1.25,1.25,1.25))
+cutoffs=data.frame(adt=selected_features, cutoff=c(1,1,1,0.5,1,1,1,0.5,1.25,1.25))
 
 dotplot_adt$data$pct.exp.sup.cutoff=NA
 for (i in 1:nrow(dotplot_adt$data)){
@@ -163,10 +149,23 @@ dotplot = dot_plot(
   size.breaks.number=4, color.breaks.number=4, shape.breaks.number=5
   , dend_x_var=c("RNA.avg.exp.scaled","ADT.avg.exp.scaled"), dend_y_var=c("RNA.avg.exp.scaled","ADT.avg.exp.scaled"), dist_method="euclidean", hclust_method="ward.D", do.return = TRUE)
 
-
+dotplot = dot_plot( 
+  data.to.plot=data_to_plot[,c("features.plot","id", colnames(data_to_plot)[!(colnames(data_to_plot) %in% c("features.plot","id"))])], 
+  size_var="ADT.pct.exp.sup.cutoff",col_var="ADT.avg.exp.scaled", text_var="RNA.pct.exp",
+  shape_var="canonical_marker", shape_use = c("\u25CF","\u2737"),
+  x.lab.pos="bottom",y.lab.pos="left", 
+  cols.use=c("lightgrey","orange","red", "darkred"),size_legend="ADT.pct", col_legend="ADT.exp", shape_legend="Canonical marker ?", 
+  shape.scale =12, text.size=3, 
+  plot.legend = TRUE,x.lab.rot = TRUE, 
+  size.breaks.number=5, color.breaks.number=4, shape.breaks.number=5
+  , dend_x_var=c("RNA.avg.exp.scaled","ADT.avg.exp.scaled"), dend_y_var=c("RNA.avg.exp.scaled","ADT.avg.exp.scaled"), dist_method="euclidean", hclust_method="ward.D", do.return = TRUE)
 ```
 
 
+## Session Info
+```{r}
+sessionInfo()
+```
 
 
 

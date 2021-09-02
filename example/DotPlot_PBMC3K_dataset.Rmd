@@ -14,7 +14,7 @@ https://satijalab.org/seurat/v3.2/visualization_vignette.html
 
 ## Libraries
 
-```{r}
+```{r warning=F, message=F}
 library(Seurat)
 library(SeuratData) # to install -> devtools::install_github('satijalab/seurat-data')
 
@@ -23,7 +23,7 @@ library(SeuratData) # to install -> devtools::install_github('satijalab/seurat-d
 
 ## Get PBMC data via SeuratData package
 
-```{r}
+```{r warning=F, message=F}
 InstallData("pbmc3k")
 data("pbmc3k")
 pbmc3k
@@ -43,7 +43,7 @@ dp
 
 
 ## Dot plot with FlexDotPlot package
-```{r message=FALSE, warning=FALSE, fig.width=8}
+```{r message=FALSE, warning=FALSE, fig.width=8, fig.height=6}
 library(FlexDotPlot)
 
 # Seurat-like dot plot with FlexDotPlot
@@ -56,9 +56,21 @@ dot_plot(dp$data[,c(3,4,1,2,5)], shape_var = "pct.exp", col_var = "avg.exp.scale
          shape_legend = "Percent Expressed", col_legend = "Average Expression", x.lab.pos = "bottom")
 
 # Add dendrograms
-dot_plot(dp$data[,c(3,4,1,2,5)], shape_var = "pct.exp", col_var = "avg.exp.scaled", 
+dotplot=dot_plot(dp$data[,c(3,4,1,2,5)], shape_var = "pct.exp", col_var = "avg.exp.scaled", 
          shape_legend = "Percent Expressed", col_legend = "Average Expression", x.lab.pos = "bottom", 
-         dend_x_var = c("pct.exp","avg.exp.scaled"), dend_y_var = c("pct.exp","avg.exp.scaled"), hclust_method = "ward.D2")
+         dend_x_var = c("pct.exp","avg.exp.scaled"), dend_y_var = c("pct.exp","avg.exp.scaled"), hclust_method = "ward.D2", do.return=T)
 ```
 
+## Dot plot with with Seurat and same gene/cluster ordering
+```{r message=FALSE, warning=FALSE, fig.width=8, fig.height=6}
+Idents(pbmc3k.final)=factor(Idents(pbmc3k.final), levels=dotplot$plot$grobs[[4]]$label)
+DotPlot(pbmc3k.final, features = dotplot$plot$grobs[[10]]$label) + RotatedAxis()
+
+```
+
+
+## Session Info
+```{r}
+sessionInfo()
+```
 

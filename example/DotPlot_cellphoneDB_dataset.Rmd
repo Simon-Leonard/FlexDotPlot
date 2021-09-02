@@ -1,0 +1,246 @@
+---
+title: "Dotplot with cellphoneDB dataset"
+author: "S.Leonard"
+date: "16/06/2021"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+---
+
+## Package Loading
+
+```{r message=FALSE}
+library(Seurat)
+library(data.table)
+library(ggplot2)
+```
+
+## Import scRNAseq data and generate cellphonedb inputs
+
+### Import data and create seurat object
+
+Data from : <https://doi.org/10.1016/j.ccell.2021.02.015>
+
+Data availability : <https://singlecell.broadinstitute.org/single_cell/study/SCP1288/tumor-and-immune-reprogramming-during-immunotherapy-in-advanced-renal-cell-carcinoma#study-summary>
+
+```{r message=FALSE, warning=FALSE}
+
+count=fread("E:/Analyses_10X_ccRCC_Bi_2021/SCP1288/expression/ccRCC_scRNASeq_NormalizedCounts.txt", sep="\t", header=T, data.table = F)
+rownames(count)=count$GENE
+count$GENE=NULL
+
+meta=read.table("E:/Analyses_10X_ccRCC_Bi_2021/SCP1288/cluster/Final_SCP_ClusterFile.txt", header=T, sep="\t", row.names = 1)
+meta=meta[-1,]
+colnames(meta)[1:2]=c("UMAP_1","UMAP_2")
+meta$UMAP_1=as.numeric(meta$UMAP_1); meta$UMAP_2=as.numeric(meta$UMAP_2)
+
+seurat=CreateSeuratObject(counts = as.matrix(count), meta.data = meta)
+seurat[["umap"]]=CreateDimReducObject(embeddings = as.matrix(meta[,c("UMAP_1","UMAP_2")]), key="umap_")
+DimPlot(seurat, group.by = "Lineage")
+
+rm(count, meta)
+
+```
+
+### Create custom clusters to aggregate all CD8+ T cells and all TAMs
+
+```{r}
+seurat$cluster=seurat$FinalCellType
+seurat$cluster[grep("CD8\\+ T cell", seurat$cluster)]="CD8+ T cell"
+seurat$cluster[grep("TAM", seurat$cluster)]="TAM"
+
+# Subset seurat to keep cells used in cellphoneDB
+Idents(seurat)="cluster"
+subseurat=subset(seurat, idents = c("CD8+ T cell", "TAM","TP1","TP2"))
+```
+
+### Generate/write cellphonedb inputs
+
+```{r eval=FALSE}
+
+write.table(seurat@assays$RNA@data, "E:/Analyses_10X_ccRCC_Bi_2021/cellphonedb/21_06_10_cellphonedb_count_CD8_TAM_Tum.txt", sep="\t", quote=F)
+
+# generating meta file
+meta_data <- cbind(rownames(subseurat@meta.data), subseurat@meta.data[,"cluster", drop=F])   #####  cluster is the user's specific cluster column
+write.table(meta_data, "E:/Analyses_10X_ccRCC_Bi_2021/cellphonedb/21_06_10_cellphonedb_meta_CD8_TAM_Tum.txt", sep="\t", quote=F, row.names=F)
+
+```
+
+## Run cellphoneDB
+
+```{python, eval=F}
+cellphonedb method statistical_analysis --counts-data gene_name 21_06_10_cellphonedb_meta_CD8_TAM_Tum.txt 21_06_10_cellphonedb_count_CD8_TAM_Tum.txt
+```
+
+## Analyse cellphoneDB outputs
+
+Adapted from dotplot function in cellphonedb : <https://github.com/Teichlab/cellphonedb/blob/master/cellphonedb/src/plotters/R/plot_dot_by_column_name.R>
+
+### Input/parameters
+
+```{r}
+dir="E:/Analyses_10X_ccRCC_Bi_2021/cellphonedb/"
+selected_rows = read.delim(paste(dir,"dotplot_rows.txt",sep=""), header=F)[,1]
+selected_columns = read.delim(paste(dir,"dotplot_cols.txt",sep=""), header=F)[,1]
+means_path = paste(dir,'/out/means.txt', sep="")
+pvalues_path = paste(dir,'/out/pvalues.txt', sep="")
+means_separator = '\t'
+pvalues_separator = '\t'
+```
+
+### Process cellphoneDB outputs
+
+```{r}
+all_pval = read.table(pvalues_path, header=T, stringsAsFactors = F, sep=means_separator, comment.char = '', check.names=F)
+all_means = read.table(means_path, header=T, stringsAsFactors = F, sep=pvalues_separator, comment.char = '', check.names=F)
+
+intr_pairs = all_pval$interacting_pair
+all_pval = all_pval[,-c(1:11)]
+all_means = all_means[,-c(1:11)]
+
+if(is.null(selected_rows)){
+  selected_rows = intr_pairs
+}
+
+if(is.null(selected_columns)){
+  selected_columns = colnames(all_pval)
+}
+
+sel_pval = all_pval[match(selected_rows, intr_pairs), selected_columns]
+sel_means = all_means[match(selected_rows, intr_pairs), selected_columns]
+
+df_names = expand.grid(selected_rows, selected_columns)
+pval = unlist(sel_pval)
+pval[pval==0] = 0.0009
+plot.data = cbind(df_names,pval)
+pr = unlist(as.data.frame(sel_means))
+pr[pr==0] = 1
+plot.data = cbind(plot.data,log2(pr))
+colnames(plot.data) = c('pair', 'clusters', 'pvalue', 'mean')
+```
+
+### Process dotplot input to get same dotplot as in the original paper-
+
+```{r}
+# Reverse some interactions according to original figure
+int_to_revers=c("IFNG_Type II IFNR", "CCL4_CCR5", "CCL3_CCR1", "HLA-F_LILRB1", "TIGIT_NECTIN2", "PDCD1_PDCD1LG2")
+
+pair.levels=levels(plot.data$pair)
+clus.levels=levels(plot.data$clusters)
+
+plot.data$pair=as.character(plot.data$pair)
+plot.data$clusters=as.character(plot.data$clusters)
+for (i in 1:nrow(plot.data)){
+  if (plot.data[i,"pair"] %in% int_to_revers){
+    x=plot.data[i,"pair"]
+    plot.data[i,"pair"]=paste(substring(x,as.numeric(gregexpr("_",x))+1),substring(x,1,as.numeric(gregexpr("_",x))-1), sep="_")
+    
+    x=plot.data[i,"clusters"]
+    plot.data[i,"clusters"]=paste(substring(x,as.numeric(gregexpr("\\|",x))+1),substring(x,1,as.numeric(gregexpr("\\|",x))-1), sep="|")
+  }
+}
+plot.data$pair=factor(plot.data$pair, levels = unique(plot.data$pair))
+plot.data$clusters=factor(plot.data$clusters, levels = clus.levels)
+
+plot.data=plot.data[plot.data$clusters %in% levels(plot.data$clusters)[1:5],]
+
+```
+
+### Generate dotplot : cellphonedb/original figure way
+
+```{r}
+my_palette <- colorRampPalette(c("#179493","#76c286", "#ebdc96", "#ec9173","#d0587e"), alpha=TRUE)(n=399)
+
+ggplot(plot.data,aes(x=clusters,y=pair)) +
+  geom_point(aes(size=-log10(pvalue),color=mean)) +
+  scale_color_gradientn('Log2 mean (Molecule 1, Molecule 2)', colors=my_palette) +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        axis.text=element_text(size=14, colour = "black"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_text(size=12, colour = "black"),
+        axis.title=element_blank(),
+        panel.border = element_rect(size = 0.7, linetype = "solid", colour = "black"))
+
+```
+
+### Add some expression metrics for each pair
+
+```{r}
+plot.data$mean1=NA
+plot.data$mean2=NA
+plot.data$pct1=NA
+plot.data$pct2=NA
+for (i in 1:nrow(plot.data)){
+  x=substring(plot.data[i,"pair"],1,as.numeric(gregexpr("_",plot.data[i,"pair"]))-1)
+  y=substring(plot.data[i,"clusters"],1,as.numeric(gregexpr("\\|",plot.data[i,"clusters"]))-1)
+  if(x %in% rownames(subseurat)){
+    fetch=FetchData(subseurat, x, cells=WhichCells(subseurat, idents=y))[,1]
+  }else if (x=="Type II IFNR"){
+    fetch=unlist(FetchData(subseurat, c("IFNGR1", "IFNGR2"), cells=WhichCells(subseurat, idents=y)))
+  }
+  plot.data$mean1[i]=mean(fetch)
+  plot.data$pct1[i]=round(sum(fetch>0)/length(fetch)*100)
+  
+  x=substring(plot.data[i,"pair"],as.numeric(gregexpr("_",plot.data[i,"pair"]))+1)
+  y=substring(plot.data[i,"clusters"],as.numeric(gregexpr("\\|",plot.data[i,"clusters"]))+1)
+  if(x %in% rownames(subseurat)){
+    fetch=FetchData(subseurat, x, cells=WhichCells(subseurat, idents=y))[,1]
+  }else if (x=="Type II IFNR"){
+    fetch=unlist(FetchData(subseurat, c("IFNGR1", "IFNGR2"), cells=WhichCells(subseurat, idents=y)))
+  }
+  plot.data$mean2[i]=mean(fetch)
+  plot.data$pct2[i]=round(sum(fetch>0)/length(fetch)*100)
+}
+
+plot.data$log2mean1=log2(plot.data$mean1)
+plot.data$log2mean2=log2(plot.data$mean2)
+plot.data$log10pval=-log10(plot.data$pvalue)
+plot.data$clusters=factor(plot.data$clusters, levels=intersect(levels(plot.data$clusters), plot.data$clusters))
+
+```
+
+### Split each dotplot column to have one column for receptor and one other for ligand
+
+```{r}
+plot.data=plot.data[order(plot.data$clusters, decreasing = F),]
+plot.data$clusters=as.character(plot.data$clusters)
+
+res=data.frame()
+for (i in 1:nrow(plot.data)){
+  res1=plot.data[i,c(1:4,seq(5,9,2),11)]
+  res2=plot.data[i,c(1:4,seq(6,10,2),11)]
+  
+  colnames(res1)[4:7]=colnames(res2)[4:7]=c("log2mean_pair","mean_gene","pct_gene","log2mean_gene")
+  res1$clusters=paste(res1$clusters,"1",sep="_")
+  res2$clusters=paste(res2$clusters,"2",sep="_")
+  
+  res=rbind(res,res1,res2)
+}
+
+res$clusters=factor(res$clusters, levels = unique(res$clusters))
+res$round_mean_gene=round(res$mean_gene, 1)
+
+```
+
+### Dotplot with FlexDotPlot
+
+```{r message=FALSE, warning=FALSE, fig.width= 6, fig.height=6}
+library(FlexDotPlot)
+dot_plot(res, shape_var = "pct_gene", col_var = 'log10pval', 
+         # text_var = "round_mean_gene",
+         shape.scale = 14,
+         color.breaks.values = c(0,1,2,3), shape.breaks.number = 5, size.breaks.number = 5,
+         x.lab.pos = "bottom",vertical_coloring = c(NA,NA,"grey","grey"),
+         col_legend = "-log10(pval)", cols.use = c("white","blue"),
+         text.size = 3,
+         transpose = T)
+```
+
+
+## Session Info
+```{r}
+sessionInfo()
+```
