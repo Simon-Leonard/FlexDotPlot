@@ -407,7 +407,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
       panel.background = element_rect(fill="transparent",linetype="solid", color="black"),
       panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
       legend.key = element_rect(colour = NA, fill = NA), axis.ticks = element_blank(),
-      # plot.margin = unit(c(1,1,1,1), "points")
+      plot.margin = unit(c(0,0,0,0), "points")
       ) 
     p <- p + coord_cartesian(xlim=xlims,ylim=ylims,expand=FALSE, default=T)
     
@@ -889,8 +889,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
   p <- p + theme(panel.background = element_rect(fill="transparent",linetype=0))
   
   # Add panel border which contain plot only (legend outside) => /!\ It adds an additional margin in dotplot (not in pacman plot)
-  p <- p + geom_rect(aes(xmin=0.5,xmax=max(as.numeric(data.to.plot[,1]))+0.5,ymin=0.5,ymax=max(as.numeric(data.to.plot[,2]))+0.5),
-                     alpha=0, colour="black")
+  p <- p + geom_rect(aes(xmin=0.5,xmax=max(as.numeric(data.to.plot[,1]))+0.5,ymin=0.5,ymax=max(as.numeric(data.to.plot[,2]))+0.5), alpha=0, colour="black")
 
   # Remove legend (printed in another grob)
   dot_plot_legend=get_legend(p)
