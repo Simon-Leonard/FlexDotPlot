@@ -8,24 +8,42 @@
 rotate_dot_plot_dendrogram(dot_plot_output, axis_to_rotate = c("x", "y"))
 }
 \arguments{
-\item{dot_plot_output}{Output from dot_plot function}
+\item{dot_plot_output}{Output from \code{\link{dot_plot}} function function}
 
 \item{axis_to_rotate}{Dendrogram to rotate "x" or "y"}
 }
 \value{
-Print and return rotated dot plot output
+Print and return rotated dot plot
 }
 \description{
 Take a output from dot_plot function and allow interactive dendrogram rotation with dendextend package
 }
 \examples{
 # Perform dot_plot
-dot_plot_output = dot_plot(...)
-# y rotation
-r1=rotate_dot_plot_dendrogram(dot_plot_output, "y")
-# add x rotation to previous result
-r2=rotate_dot_plot_dendrogram(r1, "x")
+if(interactive()){
+library(FlexDotPlot)
+data(CBMC8K_example_data)
+
+# Run dot_plot
+dotplot_output = dot_plot(data.to.plot=CBMC8K_example_data, size_var="RNA.avg.exp.scaled",
+dend_x_var=c("RNA.avg.exp.scaled","ADT.avg.exp.scaled"),
+dend_y_var=c("RNA.avg.exp.scaled","ADT.avg.exp.scaled"),
+dist_method="euclidean",hclust_method="ward.D", do.return = TRUE)
+
+# The following command has to be run when the user
+#is running example("rotate_dot_plot_dendrogram") only.
+dotplot_output$command=call("dot_plot", data.to.plot=as.name("CBMC8K_example_data"),
+size_var="RNA.avg.exp.scaled",
+dend_x_var=c("RNA.avg.exp.scaled","ADT.avg.exp.scaled"),
+dend_y_var=c("RNA.avg.exp.scaled","ADT.avg.exp.scaled"),
+dist_method="euclidean",hclust_method="ward.D", do.return = TRUE)
+
+# y  dendrogram rotation
+r1=rotate_dot_plot_dendrogram(dotplot_output, axis_to_rotate = "y")
+# add x dendrogram rotation to previous result
+#r2=rotate_dot_plot_dendrogram(r1, axis_to_rotate = "x")
+}
 }
 \author{
-Simon Leonard - simon_leonard[a]hotmail.fr
+Simon Leonard - simon.leonard@univ-rennes1.fr
 }

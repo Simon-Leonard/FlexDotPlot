@@ -1,11 +1,15 @@
 ---
 title: "Dotplot with cellphoneDB dataset"
-author: "S.Leonard"
-date: "16/06/2021"
+author: "Simon Leonard"
+date: "22/02/01"
 output:
   html_document:
     toc: yes
     toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{FlexDotPlot_cellphoneDB_dataset}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ## Package Loading

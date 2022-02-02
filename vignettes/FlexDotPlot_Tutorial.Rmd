@@ -1,0 +1,388 @@
+---
+title: "FlexDotPlot_Tutorial"
+author: "Simon Leonard"
+date: "22/02/01"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+fig_width: 8
+fig_height: 20
+vignette: >
+  %\VignetteIndexEntry{FlexDotPlot_Tutorial}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>", 
+  echo = TRUE,
+  fig.width = 16, fig.height = 6
+)
+```
+
+## Package installation
+```{r, eval=FALSE}
+install.packages("devtools")
+devtools::install_github("Simon-Leonard/FlexDotPlot")
+
+```
+
+
+## Package Loading
+```{r message=FALSE}
+library(FlexDotPlot)
+```
+
+***
+
+## Run the dot_plot function
+
+### 1. Example dataset {.tabset}
+
+#### Command
+```{r}
+data(PBMC3K_example_data)
+```
+
+
+#### Input overview (head)
+```{r}
+head(PBMC3K_example_data)
+```
+
+#### Input overview (summary)
+```{r}
+summary(PBMC3K_example_data)
+```
+
+
+
+***
+
+### 2. Choose variables to plot {.tabset}
+
+#### Use the size parameters 
+
+Size can be set with a column name using the size_var argument. Size scale can be adjusted with the shape.scale argument
+```{r message=FALSE, warning=FALSE}
+dot_plot(data.to.plot = PBMC3K_example_data, size_var = "pct.exp", shape.scale = 8)
+```
+
+
+A column index or a vector can also be provided 
+```{r, eval=F}
+# Same results
+dot_plot(data.to.plot = PBMC3K_example_data, size_var = 3, shape.scale = 8) # Third column = pct.exp
+dot_plot(data.to.plot = PBMC3K_example_data, size_var = PBMC3K_example_data$pct.exp, shape.scale = 8)
+```
+
+Comment : The variable controlling the shape size has to be numeric
+```{r, eval=F}
+class(PBMC3K_example_data$pval_symb)
+dot_plot(data.to.plot = PBMC3K_example_data, size_var ="pval_symb") # Error ; size_var column has to be numeric
+```
+
+##### Additional size parameters
+
+Scale the size by size or radius with the scale.by argument (default = "radius")
+Set lower and upper limits for scaling with scale.min and scale.max arguments, use NA for default values.
+
+***
+
+#### Use the color parameters 
+
+Color can be set with a column name using the col_var argument.
+```{r message=FALSE, warning=FALSE}
+dot_plot(data.to.plot = PBMC3K_example_data, col_var = "pct.exp", shape.scale = 20)
+```
+
+
+A column index or a vector can also be provided 
+```{r, eval=F}
+# Same results
+dot_plot(data.to.plot = PBMC3K_example_data, col_var = 3, shape.scale = 20) # Third column = pct.exp
+dot_plot(data.to.plot = PBMC3K_example_data, col_var = PBMC3K_example_data$pct.exp, shape.scale = 20)
+```
+
+
+
+Comment : A discrete variable can also be used to set the shape color
+```{r}
+class(PBMC3K_example_data$pval_symb)
+dot_plot(data.to.plot = PBMC3K_example_data, col_var ="pval_symb", shape.scale=20) 
+```
+
+
+##### Use custom colors
+
+Custom colors can be used with the cols.use parameter
+```{r message=FALSE, warning=FALSE}
+dot_plot(data.to.plot = PBMC3K_example_data, col_var = "pct.exp", cols.use = c("yellow","blue"), shape.scale = 20)
+```
+
+#### Use the shape parameters 
+
+Variable shape can be set with a column name using the shape_var argument.
+```{r message=FALSE, warning=FALSE}
+dot_plot(data.to.plot = PBMC3K_example_data, shape_var = "pct.exp", shape.scale = 8)
+```
+
+
+A vector can also be provided 
+```{r, eval=F}
+# Same results
+dot_plot(data.to.plot = PBMC3K_example_data, shape_var = PBMC3K_example_data$pct.exp, shape.scale = 8)
+```
+
+
+
+Comment : A discrete variable can also be used to set the shape
+```{r}
+class(PBMC3K_example_data$pval_symb)
+dot_plot(data.to.plot = PBMC3K_example_data, shape_var ="pval_symb", shape.scale=20) 
+```
+
+
+You can choose the shape types with the shape_use argument and unicode characters
+```{r}
+dot_plot(data.to.plot = PBMC3K_example_data, shape_var ="pval_symb", shape_use=c("\u2605","\u2736","\u25CF","\u2737","\u2726"),
+         shape.scale=20) 
+```
+
+#### Add text on shapes 
+
+Text can be set with a column name using the text_var argument. Text size can be adjusted with the text.size argument
+```{r message=FALSE, warning=FALSE}
+dot_plot(data.to.plot = PBMC3K_example_data, text_var = "pct.exp2", text.size = 3, shape.scale = 20)
+```
+
+
+A column index or a vector can also be provided 
+```{r, eval=F}
+# Same results
+dot_plot(data.to.plot = PBMC3K_example_data, text_var = 4, , text.size = 3, shape.scale = 20)
+dot_plot(data.to.plot = PBMC3K_example_data, text_var = PBMC3K_example_data$pct.exp2, , text.size = 3, shape.scale = 20)
+```
+
+
+***
+
+### 3. Combine variables
+
+Shape, size, colors and text can be provided simultaneously and independently
+
+```{r message=FALSE, warning=FALSE, fig.height= 4}
+dot_plot(data.to.plot = PBMC3K_example_data, 
+         size_var = "pct.exp", shape.scale = 8,
+         shape_var= "pct.exp",
+         col_var = "avg_logFC"
+         )
+
+dot_plot(data.to.plot = PBMC3K_example_data, 
+         size_var = "pct.exp", shape.scale = 8,
+         shape_var= ifelse(PBMC3K_example_data$avg_logFC>0, "Up","Down"), 
+         col_var = "avg_logFC", cols.use = c("yellow","blue")
+         )
+```
+
+### 4. Add dendrograms to the plot
+
+Variable used to compute x and y dendrogramms can be provided within the dend_x_var and dend_y_var respectively.
+dist_method and hclust_methods arguments control distance method (default = euclidean) and hclust method (default = ward.D).
+
+x dendrogramm only : 
+
+
+```{r message=FALSE, warning=FALSE}
+dot_plot(data.to.plot = PBMC3K_example_data, 
+         size_var = "pct.exp", shape.scale = 8,
+         shape_var= "pct.exp",
+         col_var = "avg_logFC",
+         dend_x_var = c("pct.exp","avg_logFC"),
+         dist_method="euclidean", hclust_method="ward.D"
+         )
+```
+
+x and y dendrogramms :
+
+
+```{r message=FALSE, warning=FALSE}
+dot_plot(data.to.plot = PBMC3K_example_data, 
+         size_var = "pct.exp", shape.scale = 8,
+         shape_var= "pct.exp",
+         col_var = "avg_logFC",
+         dend_x_var = c("pct.exp","avg_logFC"),
+         dend_y_var = c("pct.exp","avg_logFC"),
+         dist_method="euclidean", hclust_method="ward.D"
+         )
+```
+
+***
+### 5. Customize plot legends {.tabset}
+
+#### Shape legend
+
+Legend title can be modified with the size_legend, col_legend and shape_legend arguments.
+
+```{r message=FALSE, warning=FALSE}
+dot_plot(data.to.plot = PBMC3K_example_data, 
+         size_var = "pct.exp", shape.scale = 8, size_legend="My size legend",
+         shape_var= "pval_symb", shape_legend="My shape legend",
+         col_var = "avg_logFC", col_legend="My col legend"
+         )
+```
+
+If you don't want to plot the legend, set the plot.legend argument to FALSE.
+
+```{r message=FALSE, warning=FALSE}
+dot_plot(data.to.plot = PBMC3K_example_data, 
+         size_var = "pct.exp", shape.scale = 8,
+         shape_var= "pval_symb",
+         col_var = "avg_logFC",
+         plot.legend=F
+         )
+```
+
+size.breaks.number argument define the number of shapes with different size to display in the legend
+
+```{r}
+dot_plot(data.to.plot = PBMC3K_example_data, size_var = "pct.exp", shape.scale = 8, size.breaks.number = 3)
+```
+
+You can also directly specify the values to get in the legend with the size.breaks.values argument
+
+```{r}
+dot_plot(data.to.plot = PBMC3K_example_data, size_var = "pct.exp", shape.scale = 8, size.breaks.values = c(0,0.25,0.5,0.75,1))
+```
+
+color.breaks.number argument define the number of labels for the color gradient legend.
+
+```{r}
+dot_plot(data.to.plot = PBMC3K_example_data, col_var = "pct.exp", shape.scale = 20, color.breaks.number = 3)
+```
+
+You can also directly specify the values to get in the legend with the color.breaks.values argument
+
+```{r}
+dot_plot(data.to.plot = PBMC3K_example_data, col_var = "pct.exp", shape.scale = 20, color.breaks.values = c(0,0.3,0.6,0.9))
+```
+
+
+#### Axis labels
+
+Axis label positions can be controled with the x.lab.pos and y.lab.pos arguments.
+x.lab.pos must be one of "bottom","top","both" or "none".
+y.lab.pos must be one of "left","right","both"or "none".
+
+```{r message=FALSE, warning=FALSE}
+dot_plot(data.to.plot = PBMC3K_example_data, 
+         size_var = "pct.exp", shape.scale = 8,
+         shape_var= "pct.exp",
+         col_var = "avg_logFC",
+         x.lab.pos="bottom",
+         y.lab.pos="left"
+         )
+```
+
+
+You can rotate x axis labels with the x.lab.rot argument (default is TRUE). Set it to FALSE if you don't want to rotate x axis labels (It's not recommended here)
+
+
+Plot can be transposed by setting the transpose argument to TRUE
+
+```{r, fig.width=6, fig.height=12}
+dot_plot(data.to.plot = PBMC3K_example_data, 
+         size_var = "pct.exp", shape.scale = 8,
+         shape_var= "pct.exp",
+         col_var = "avg_logFC",
+         transpose=TRUE
+         )
+```
+
+***
+### 6. Plot background {.tabset}
+
+#### Vertical shades
+Vertical shades can be added with the vertical_coloring argument 
+
+```{r message=FALSE, warning=FALSE}
+dot_plot(data.to.plot = PBMC3K_example_data, 
+         size_var = "pct.exp", shape.scale = 8,
+         shape_var= "pct.exp",
+         col_var = "avg_logFC",
+         vertical_coloring=c(NA, "gray80")
+         )
+```
+
+#### Horizontal shades
+
+Horizontal shades can be added with the horizontal_coloring argument 
+
+```{r message=FALSE, warning=FALSE}
+dot_plot(data.to.plot = PBMC3K_example_data, 
+         size_var = "pct.exp", shape.scale = 8,
+         shape_var= "pct.exp",
+         col_var = "avg_logFC",
+         horizontal_coloring=c(NA, "gray80")
+         )
+```
+
+
+### 7. Get the corresponding ggplot object
+
+Set do.return to TRUE to get the corresponding ggplot object
+
+```{r eval=FALSE}
+ggplot_object <- dot_plot(data.to.plot = PBMC3K_example_data, 
+                          size_var = "pct.exp", shape.scale = 8,
+                          shape_var= "pct.exp",
+                          col_var = "avg_logFC",
+                          do.return = TRUE
+                          )
+```
+
+
+## Run the Shiny app 
+
+
+```{r eval=FALSE}
+Shiny_dot_plot() 
+```
+
+
+## Reproduce the article figure 
+
+Full script to generate dotplot input can be found at in the FlexDotPlot_CBMC_dataset vignette
+
+```{r}
+### Import data + create the exp.type column
+data(CBMC8K_example_data)
+
+### Dotplot
+dotplot = dot_plot( 
+  data.to.plot=CBMC8K_example_data, 
+  size_var="RNA.avg.exp.scaled",col_var="ADT.avg.exp.scaled", text_var="ADT.pct.exp.sup.cutoff",
+  shape_var="canonical_marker", shape_use = c("\u25CF","\u2737"),
+  x.lab.pos="bottom",y.lab.pos="left", 
+  cols.use=c("lightgrey","orange","red", "darkred"),size_legend="RNA", col_legend="ADT", shape_legend="Canonical marker ?", 
+  shape.scale =12, text.size=3, 
+  plot.legend = TRUE,x.lab.rot = TRUE, 
+  size.breaks.number=4, color.breaks.number=4, shape.breaks.number=5
+  , dend_x_var=c("RNA.avg.exp.scaled","ADT.avg.exp.scaled"), dend_y_var=c("RNA.avg.exp.scaled","ADT.avg.exp.scaled"), dist_method="euclidean",
+  hclust_method="ward.D", do.return = TRUE)
+
+ 
+```
+
+
+## Session Info
+```{r echo=FALSE}
+sessionInfo()
+```
+

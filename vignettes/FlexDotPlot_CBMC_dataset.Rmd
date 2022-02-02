@@ -1,11 +1,15 @@
 ---
 title: "Dotplot with PBMC3K example dataset"
-author: "S.Leonard"
-date: "03/09/2020"
+author: "Simon Leonard"
+date: "22/02/01"
 output:
   html_document:
     toc: yes
     toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{FlexDotPlot_CBMC_dataset}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
 ---
 
 Usefull links :
@@ -18,9 +22,7 @@ https://satijalab.org/seurat/v3.2/visualization_vignette.html
 library(Seurat)
 library(ggplot2)
 library(plyr)
-library(devtools)
-library(SeuratData)
-
+require(SeuratData)
 ```
 
 
@@ -28,9 +30,9 @@ library(SeuratData)
 Inspired from cbmc.SeuratData package - https://github.com/satijalab/seurat-data
 
 ```{r warning=F, message=F}
-# InstallData("cbmc")
+InstallData("cbmc")
 data("cbmc")
-
+cbmc
 ```
 
 ## Filter Data 
@@ -44,7 +46,6 @@ cbmc <- ScaleData(cbmc, assay = "ADT")
 rownames(cbmc@assays$ADT@data)=revalue(rownames(cbmc@assays$ADT@data), c(CD3="CD3E", CD8="CD8A", CD45RA="PTPRC", CD56="NCAM1", 
                                                                          CD16="FCGR3A", CD11c="ITGAX"))
 ```
-
 
 
 ## Get Seurat DotPlot data
@@ -166,7 +167,6 @@ dotplot = dot_plot(
 ```{r}
 sessionInfo()
 ```
-
 
 
 

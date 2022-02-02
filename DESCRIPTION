@@ -1,30 +1,51 @@
 Package: FlexDotPlot
-Type: Package
-Title: Flexible DotPlot
-Version: 0.1.2
-Author: Simon LEONARD
-Maintainer: Simon Leonard <simon_leonard@hotmail.fr>
-Description: Flexible Dotplot and Pacman plot for multimodal data
-Depends:
-    R (>= 3.6.3),
+Title: Flexible Dot Plot
+Version: 0.2.0
+Authors@R: 
+    person(given = "Simon",
+           family = "Leonard",
+           role = c("aut", "cre"),
+           email = "simon.leonard@univ-rennes1.fr",
+           comment = c(ORCID = "0000-0002-6437-5800"))
+Description: Flexible Dotplot and Pacman plot for multimodal data.
+Depends: R (>= 3.6.0)
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
+Imports: 
+    ggplot2,
+    grDevices,
+    stats,
+    FactoMineR,
+    scales,
+    reshape2,
+    ggdendro,
+    grImport2,
+    grid,
+    gridExtra,
+    sisal,
+    dendextend,
     shiny,
     shinydashboard,
-	shinyWidgets,
-    ggplot2,
-	ggdendro,
-	gtable,
-	grid,
-	gridExtra,
-	FactoMineR,
-    reshape2,
-	grDevices,
-	colourpicker,
-	htmltools,
-	bsplus,
-	dendextend,
-	sisal,
-	scales,
-	grImport2,
-License: GPL-2
-Encoding: UTF-8
-RoxygenNote: 7.1.1
+    shinyWidgets,
+    ggforce,
+    colourpicker,
+    htmltools,
+    bsplus,
+    DT,
+    magrittr
+Suggests: 
+    knitr,
+    rmarkdown,
+    markdown,
+    Seurat,
+    infercnv,
+    SeuratData,
+    plyr,
+    biomaRt,
+    data.table
+VignetteBuilder: knitr
+URL: https://github.com/Simon-Leonard/FlexDotPlot
+BugReports: https://github.com/Simon-Leonard/FlexDotPlot/issues

@@ -57,11 +57,11 @@ If list : x and y axis are fixed by row and col names of list elements.}
 Can also be a column/element name or a vector of the same size than the input dataset.
 Set to NA if you don't want to control shape size.}
 
-\item{col_var}{If numeric : Column/List index which control shape colors. 
+\item{col_var}{If numeric : Column/List index which control shape colors.
 Can also be a column/element name or a vector of the same size than the input dataset.
 Set to NA if you don't want to control shape color.}
 
-\item{text_var}{If numeric : Column/List index which control text to add on shapes. 
+\item{text_var}{If numeric : Column/List index which control text to add on shapes.
 Can also be a column/element name or a vector of the same size than the input dataset.
 Set to NA if you don't want to add text.}
 
@@ -86,6 +86,10 @@ If coloring is discrete, default colors are taken from the default ggplot2 palet
 \item{shape.scale}{Scale the size of the shapes, similar to cex.}
 
 \item{scale.by}{Scale the size by size or radius.}
+
+\item{scale.min}{Set lower limit for scaling, use NA for default values.}
+
+\item{scale.max}{Set upper limit for scaling, use NA for default values.}
 
 \item{plot.legend}{Plot the legends ?}
 
@@ -130,8 +134,6 @@ If coloring is discrete, default colors are taken from the default ggplot2 palet
 \item{hclust_method}{The agglomeration method to be used. This must be one of "single", "complete", "average", "mcquitty", "ward.D", "ward.D2", "centroid" or "median".}
 
 \item{do.plot}{Print the plot ? (default=TRUE)}
-
-\item{scale.min/scale.max}{Set lower and upper limits for scaling, use NA for default values.}
 }
 \value{
 Print the plot (if do.plot=TRUE) and return a list containing input data, executed command, resulting dot plot and computed dendrograms (if do.return=TRUE)
@@ -139,6 +141,20 @@ Print the plot (if do.plot=TRUE) and return a list containing input data, execut
 \description{
 Create dotplots to represent two discrete factors (x & y) described by several other factors. Each combination of the two discrete factors (x & y) can be described with : 1 continuous factor (setting shape size), 3 continuous or discrete factors (setting shape type, shape color and text on shape).
 }
+\examples{
+library(FlexDotPlot)
+data(CBMC8K_example_data)
+dotplot = dot_plot(data.to.plot=CBMC8K_example_data, size_var="RNA.avg.exp.scaled",
+col_var="ADT.avg.exp.scaled", text_var="ADT.pct.exp.sup.cutoff",
+shape_var="canonical_marker", shape_use = c("\u25CF","\u2737"),x.lab.pos="bottom",
+y.lab.pos="left", cols.use=c("lightgrey","orange","red", "darkred"),
+size_legend="RNA", col_legend="ADT", shape_legend="Canonical marker ?",
+shape.scale =12, text.size=3, plot.legend = TRUE,x.lab.rot = TRUE,
+size.breaks.number=4, color.breaks.number=4, shape.breaks.number=5,
+dend_x_var=c("RNA.avg.exp.scaled","ADT.avg.exp.scaled"),
+dend_y_var=c("RNA.avg.exp.scaled","ADT.avg.exp.scaled"),
+dist_method="euclidean",hclust_method="ward.D", do.return = TRUE)
+}
 \author{
-Simon Leonard - simon_leonard[a]hotmail.fr
+Simon Leonard - simon.leonard@univ-rennes1.fr
 }

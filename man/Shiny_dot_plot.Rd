@@ -4,14 +4,14 @@
 \alias{Shiny_dot_plot}
 \title{Shiny dotplot}
 \usage{
-Shiny_dot_plot(RStudio = F)
+Shiny_dot_plot()
 }
 \description{
 Shiny application to perform dot-plot pacman-plot
 }
 \examples{
-Shiny_dot_plot()
+if(interactive()) Shiny_dot_plot()
 }
 \author{
-Simon Leonard - simon_leonard[a]hotmail.fr
+Simon Leonard - simon.leonard@univ-rennes1.fr
 }

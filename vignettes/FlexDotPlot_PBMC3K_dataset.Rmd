@@ -1,11 +1,15 @@
 ---
 title: "Dotplot with PBMC3K example dataset"
-author: "S.Leonard"
-date: "03/09/2020"
+author: "Simon Leonard"
+date: "22/02/01"
 output:
   html_document:
     toc: yes
     toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{FlexDotPlot_PBMC3K_dataset}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
 ---
 
 Usefull links :

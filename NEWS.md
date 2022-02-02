@@ -1,3 +1,9 @@
+## [0.2.0] - 2022-02-01
+### Major update
+- Full technical review to improve package structure and reliability
+### Minor update
+- Bug correction when size_var=NA and shape_var=NA
+
 ## [0.1.2] - 2020-08-25
 ### Added
 - rotate_dot_plot_dendrogram to interactively rotate dendrogram from dot_plot output
