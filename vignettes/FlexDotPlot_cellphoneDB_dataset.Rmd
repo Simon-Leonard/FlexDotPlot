@@ -12,15 +12,82 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-## Package Loading
+## Package + input Loading
 
 ```{r message=FALSE}
 library(Seurat)
 library(data.table)
 library(ggplot2)
+library(FlexDotPlot)
+data("CellphoneDB_example_data")
 ```
 
-## Import scRNAseq data and generate cellphonedb inputs
+
+### Generate dotplot : cellphonedb/original figure way
+
+```{r}
+my_palette <- colorRampPalette(c("#179493","#76c286", "#ebdc96", "#ec9173","#d0587e"), alpha=TRUE)(n=399)
+
+ggplot(CellphoneDB_example_data,aes(x=clusters,y=pair)) +
+  geom_point(aes(size=-log10(pvalue),color=mean)) +
+  scale_color_gradientn('Log2 mean (Molecule 1, Molecule 2)', colors=my_palette) +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        axis.text=element_text(size=14, colour = "black"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_text(size=12, colour = "black"),
+        axis.title=element_blank(),
+        panel.border = element_rect(size = 0.7, linetype = "solid", colour = "black"))
+
+```
+
+
+### Split each dotplot column to have one column for receptor and one other for ligand
+
+```{r}
+CellphoneDB_example_data=CellphoneDB_example_data[order(CellphoneDB_example_data$clusters, decreasing = F),]
+CellphoneDB_example_data$clusters=as.character(CellphoneDB_example_data$clusters)
+
+res=data.frame()
+for (i in 1:nrow(CellphoneDB_example_data)){
+  res1=CellphoneDB_example_data[i,c(1:4,seq(5,9,2),11)]
+  res2=CellphoneDB_example_data[i,c(1:4,seq(6,10,2),11)]
+  
+  colnames(res1)[4:7]=colnames(res2)[4:7]=c("log2mean_pair","mean_gene","pct_gene","log2mean_gene")
+  res1$clusters=paste(res1$clusters,"1",sep="_")
+  res2$clusters=paste(res2$clusters,"2",sep="_")
+  
+  res=rbind(res,res1,res2)
+}
+
+res$clusters=factor(res$clusters, levels = unique(res$clusters))
+res$round_mean_gene=round(res$mean_gene, 1)
+
+```
+
+### Dotplot with FlexDotPlot
+
+```{r message=FALSE, warning=FALSE, fig.width= 6, fig.height=6}
+dot_plot(res, shape_var = "pct_gene", col_var = 'log10pval', 
+         # text_var = "round_mean_gene",
+         shape.scale = 14,
+         color.breaks.values = c(0,1,2,3), shape.breaks.number = 5, size.breaks.number = 5,
+         x.lab.pos = "bottom",vertical_coloring = c(NA,NA,"grey","grey"),
+         col_legend = "-log10(pval)", cols.use = c("white","blue"),
+         text.size = 3,
+         transpose = T)
+```
+
+
+## Session Info
+```{r}
+sessionInfo()
+```
+
+
+
+## Generate  CellphoneDB_example_data from raw scRNAseq data
 
 ### Import data and create seurat object
 
@@ -28,7 +95,7 @@ Data from : <https://doi.org/10.1016/j.ccell.2021.02.015>
 
 Data availability : <https://singlecell.broadinstitute.org/single_cell/study/SCP1288/tumor-and-immune-reprogramming-during-immunotherapy-in-advanced-renal-cell-carcinoma#study-summary>
 
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, eval=FALSE}
 
 count=fread("E:/Analyses_10X_ccRCC_Bi_2021/SCP1288/expression/ccRCC_scRNASeq_NormalizedCounts.txt", sep="\t", header=T, data.table = F)
 rownames(count)=count$GENE
@@ -49,7 +116,7 @@ rm(count, meta)
 
 ### Create custom clusters to aggregate all CD8+ T cells and all TAMs
 
-```{r}
+```{r, eval=FALSE}
 seurat$cluster=seurat$FinalCellType
 seurat$cluster[grep("CD8\\+ T cell", seurat$cluster)]="CD8+ T cell"
 seurat$cluster[grep("TAM", seurat$cluster)]="TAM"
@@ -73,17 +140,17 @@ write.table(meta_data, "E:/Analyses_10X_ccRCC_Bi_2021/cellphonedb/21_06_10_cellp
 
 ## Run cellphoneDB
 
-```{python, eval=F}
+```{python, eval=FALSE}
 cellphonedb method statistical_analysis --counts-data gene_name 21_06_10_cellphonedb_meta_CD8_TAM_Tum.txt 21_06_10_cellphonedb_count_CD8_TAM_Tum.txt
 ```
 
-## Analyse cellphoneDB outputs
+## Process cellphoneDB outputs
 
 Adapted from dotplot function in cellphonedb : <https://github.com/Teichlab/cellphonedb/blob/master/cellphonedb/src/plotters/R/plot_dot_by_column_name.R>
 
 ### Input/parameters
 
-```{r}
+```{r, eval=FALSE}
 dir="E:/Analyses_10X_ccRCC_Bi_2021/cellphonedb/"
 selected_rows = read.delim(paste(dir,"dotplot_rows.txt",sep=""), header=F)[,1]
 selected_columns = read.delim(paste(dir,"dotplot_cols.txt",sep=""), header=F)[,1]
@@ -95,7 +162,7 @@ pvalues_separator = '\t'
 
 ### Process cellphoneDB outputs
 
-```{r}
+```{r, eval=FALSE}
 all_pval = read.table(pvalues_path, header=T, stringsAsFactors = F, sep=means_separator, comment.char = '', check.names=F)
 all_means = read.table(means_path, header=T, stringsAsFactors = F, sep=pvalues_separator, comment.char = '', check.names=F)
 
@@ -126,7 +193,7 @@ colnames(plot.data) = c('pair', 'clusters', 'pvalue', 'mean')
 
 ### Process dotplot input to get same dotplot as in the original paper-
 
-```{r}
+```{r, eval=FALSE}
 # Reverse some interactions according to original figure
 int_to_revers=c("IFNG_Type II IFNR", "CCL4_CCR5", "CCL3_CCR1", "HLA-F_LILRB1", "TIGIT_NECTIN2", "PDCD1_PDCD1LG2")
 
@@ -151,28 +218,9 @@ plot.data=plot.data[plot.data$clusters %in% levels(plot.data$clusters)[1:5],]
 
 ```
 
-### Generate dotplot : cellphonedb/original figure way
-
-```{r}
-my_palette <- colorRampPalette(c("#179493","#76c286", "#ebdc96", "#ec9173","#d0587e"), alpha=TRUE)(n=399)
-
-ggplot(plot.data,aes(x=clusters,y=pair)) +
-  geom_point(aes(size=-log10(pvalue),color=mean)) +
-  scale_color_gradientn('Log2 mean (Molecule 1, Molecule 2)', colors=my_palette) +
-  theme_bw() +
-  theme(panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
-        axis.text=element_text(size=14, colour = "black"),
-        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
-        axis.text.y = element_text(size=12, colour = "black"),
-        axis.title=element_blank(),
-        panel.border = element_rect(size = 0.7, linetype = "solid", colour = "black"))
-
-```
-
 ### Add some expression metrics for each pair
 
-```{r}
+```{r, eval=FALSE}
 plot.data$mean1=NA
 plot.data$mean2=NA
 plot.data$pct1=NA
@@ -204,47 +252,4 @@ plot.data$log2mean2=log2(plot.data$mean2)
 plot.data$log10pval=-log10(plot.data$pvalue)
 plot.data$clusters=factor(plot.data$clusters, levels=intersect(levels(plot.data$clusters), plot.data$clusters))
 
-```
-
-### Split each dotplot column to have one column for receptor and one other for ligand
-
-```{r}
-plot.data=plot.data[order(plot.data$clusters, decreasing = F),]
-plot.data$clusters=as.character(plot.data$clusters)
-
-res=data.frame()
-for (i in 1:nrow(plot.data)){
-  res1=plot.data[i,c(1:4,seq(5,9,2),11)]
-  res2=plot.data[i,c(1:4,seq(6,10,2),11)]
-  
-  colnames(res1)[4:7]=colnames(res2)[4:7]=c("log2mean_pair","mean_gene","pct_gene","log2mean_gene")
-  res1$clusters=paste(res1$clusters,"1",sep="_")
-  res2$clusters=paste(res2$clusters,"2",sep="_")
-  
-  res=rbind(res,res1,res2)
-}
-
-res$clusters=factor(res$clusters, levels = unique(res$clusters))
-res$round_mean_gene=round(res$mean_gene, 1)
-
-```
-
-### Dotplot with FlexDotPlot
-
-```{r message=FALSE, warning=FALSE, fig.width= 6, fig.height=6}
-library(FlexDotPlot)
-dot_plot(res, shape_var = "pct_gene", col_var = 'log10pval', 
-         # text_var = "round_mean_gene",
-         shape.scale = 14,
-         color.breaks.values = c(0,1,2,3), shape.breaks.number = 5, size.breaks.number = 5,
-         x.lab.pos = "bottom",vertical_coloring = c(NA,NA,"grey","grey"),
-         col_legend = "-log10(pval)", cols.use = c("white","blue"),
-         text.size = 3,
-         transpose = T)
-```
-
-
-## Session Info
-```{r}
-sessionInfo()
 ```

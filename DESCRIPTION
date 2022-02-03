@@ -1,6 +1,6 @@
 Package: FlexDotPlot
 Title: Flexible Dot Plot
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: 
     person(given = "Simon",
            family = "Leonard",
@@ -46,6 +46,9 @@ Suggests:
     plyr,
     biomaRt,
     data.table
+Remotes:  
+    github::satijalab/seurat-data,
+    bioc::infercnv
 VignetteBuilder: knitr
 URL: https://github.com/Simon-Leonard/FlexDotPlot
 BugReports: https://github.com/Simon-Leonard/FlexDotPlot/issues

@@ -56,3 +56,33 @@
 #' @format A data frame with 132 rows and 12 variables
 #' @references \url{https://github.com/satijalab/seurat-data}
 "CBMC8K_example_data"
+
+
+
+#' CellphoneDB example dataset
+#'
+#' A dataset containing CellPhoneDB results of 11 gene pairs in 10 combinations of 2 cell types. Raw data obtained in https://doi.org/10.1016/j.ccell.2021.02.015.
+#' Script used to generate this dataset from the raw data is available in the FlexDotPlot_cellphoneDB_dataset vignette.
+#'
+#'
+#' \itemize{
+#'   \item pair. Gene pair
+#'   \item clusters. Cell type pair
+#'   \item pvalue. pvalue from CellPhoneDB
+#'   \item mean. Log2 mean (gene pair expressions) from CellPhoneDB
+#'   \item mean1. Average expression of the first gene in the first cell type
+#'   \item mean2. Average expression of the second gene in the second cell type
+#'   \item pct1. Percentage of cells from the first cell type expressing the first gene
+#'   \item pct2. Percentage of cells from the second cell type expressing the second gene
+#'   \item log2mean1. mean1 with log2 transformation
+#'   \item log2mean2. mean2 with log2 transformation
+#'   \item log10pval. pvalue with -log10 transformation
+#' }
+#'
+#' @docType data
+#' @keywords datasets
+#' @name CellphoneDB_example_data
+#' @usage data(CellphoneDB_example_data)
+#' @format A data frame with 55 rows and 11 variables
+#' @references \url{https://doi.org/10.1016/j.ccell.2021.02.015}
+"CellphoneDB_example_data"

@@ -1,3 +1,7 @@
+## [0.2.1] - 2022-02-03
+### Minor update
+- Added CellphoneDB_example_data.rda and documentation. Modified the cellphoneDB vignette to take this dataset as input
+
 ## [0.2.0] - 2022-02-01
 ### Major update
 - Full technical review to improve package structure and reliability
