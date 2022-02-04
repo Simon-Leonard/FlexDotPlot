@@ -46,9 +46,6 @@ Suggests:
     plyr,
     biomaRt,
     data.table
-Remotes:  
-    github::satijalab/seurat-data,
-    bioc::infercnv
 VignetteBuilder: knitr
 URL: https://github.com/Simon-Leonard/FlexDotPlot
 BugReports: https://github.com/Simon-Leonard/FlexDotPlot/issues
