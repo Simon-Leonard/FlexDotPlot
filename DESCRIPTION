@@ -40,12 +40,6 @@ Suggests:
     knitr,
     rmarkdown,
     markdown,
-    Seurat,
-    infercnv,
-    SeuratData,
-    plyr,
-    biomaRt,
-    data.table
 VignetteBuilder: knitr
 URL: https://github.com/Simon-Leonard/FlexDotPlot
 BugReports: https://github.com/Simon-Leonard/FlexDotPlot/issues

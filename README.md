@@ -26,5 +26,7 @@ FlexDotPlot: a universal and modular dot plot visualization tool for complex mul
 
 https://doi.org/10.1101/2020.04.03.023655
 
+See also the [FlexDotPlot_paper](https://github.com/Simon-Leonard/FlexDotPlot_paper) repository to get the scripts used for analysis and figure generation in the FlexDotPlot paper
+
 # Contact
 Don't hesitate to contact me for any question/suggestion at simon_leonard[a]hotmail[.]fr

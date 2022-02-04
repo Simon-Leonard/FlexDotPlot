@@ -61,7 +61,7 @@
 
 #' CellphoneDB example dataset
 #'
-#' A dataset containing CellPhoneDB results of 11 gene pairs in 10 combinations of 2 cell types. Raw data obtained in https://doi.org/10.1016/j.ccell.2021.02.015.
+#' A dataset containing CellPhoneDB results of 11 gene pairs in 10 combinations of 2 cell types. Raw data obtained in \doi{10.1016/j.ccell.2021.02.015}.
 #' Script used to generate this dataset from the raw data is available in the FlexDotPlot_cellphoneDB_dataset vignette.
 #'
 #'
@@ -84,5 +84,5 @@
 #' @name CellphoneDB_example_data
 #' @usage data(CellphoneDB_example_data)
 #' @format A data frame with 55 rows and 11 variables
-#' @references \url{https://doi.org/10.1016/j.ccell.2021.02.015}
+#' @references \doi{10.1016/j.ccell.2021.02.015}
 "CellphoneDB_example_data"
