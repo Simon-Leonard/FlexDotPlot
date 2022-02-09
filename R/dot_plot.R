@@ -32,7 +32,6 @@
 #' @param do.return Return ggplot2 object ?
 #' @param x.lab.pos Where to display x axis labels. This must be one of "bottom","top","both" or "none".
 #' @param y.lab.pos Where to display y axis labels. This must be one of "left","right","both"or "none".
-#' @param x.lab.rot Rotate x-axis labels ?
 #' @param x.lab.size.factor Factor resizing x-axis labels (default=1)
 #' @param y.lab.size.factor Factor resizing y-axis labels (default=1)
 #' @param shape_var If numeric = Similar to pch : square=15; circle=16; triangle=17. Can also be a column/element name or a vector of the same size than the input dataset.
@@ -77,7 +76,7 @@
 #' shape_var="canonical_marker", shape_use = c("\u25CF","\u2737"),x.lab.pos="bottom",
 #' y.lab.pos="left", cols.use=c("lightgrey","orange","red", "darkred"),
 #' size_legend="RNA", col_legend="ADT", shape_legend="Canonical marker ?",
-#' shape.scale =12, text.size=3, plot.legend = TRUE,x.lab.rot = TRUE,
+#' shape.scale =12, text.size=3, plot.legend = TRUE,
 #' size.breaks.number=4, color.breaks.number=4, shape.breaks.number=5,
 #' dend_x_var=c("RNA.avg.exp.scaled","ADT.avg.exp.scaled"),
 #' dend_y_var=c("RNA.avg.exp.scaled","ADT.avg.exp.scaled"),
@@ -89,7 +88,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
                         text.size=NA,  text.vjust=0,
                         shape_use="default", shape.scale = 12,
                         scale.by = "radius", scale.min = NA, scale.max = NA, plot.legend = TRUE, do.return = FALSE,
-                        x.lab.rot = TRUE, x.lab.pos=c("both","top","bottom","none"), y.lab.pos=c("left","right","both","none"),
+                        x.lab.pos=c("both","top","bottom","none"), y.lab.pos=c("left","right","both","none"),
                         x.lab.size.factor=1, y.lab.size.factor=1,
                         vertical_coloring=NA, horizontal_coloring=NA,
                         size.breaks.number=4, color.breaks.number=5, shape.breaks.number=5,
@@ -954,65 +953,10 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
                c(3,4,5,6,7,8,9),
                c(NA,NA,10,NA,NA,NA,NA))
 
-  widths=c(1,3*y.lab.size.factor,10,3*y.lab.size.factor,3,3,3)
-  x_lab_heights=ifelse(x.lab.rot, 3*x.lab.size.factor, 3)
+  widths=c(1,3,10,3,3,3,3)
+  x_lab_heights=3
   heigths=c(1,x_lab_heights,10,x_lab_heights)
-
-
-  ### 4.1 Axis Labels ----
-
-  x_coords=rescale(x = 1:length(levels(data.to.plot[,1])), to = c(0,1), from=c(0.5,length(levels(data.to.plot[,1]))+0.5))
-  if(x.lab.pos == "top"){
-    if(!x.lab.rot){heigths[2]=heigths[2]/length(levels(data.to.plot[,1]))}
-    heigths[4]=0
-    final.plot.list[[2]]=dynTextGrob(levels(data.to.plot[,1]), x=x_coords, rot=ifelse(x.lab.rot, 90, 0),
-                                     just="bottom", y=0.05, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))* x.lab.size.factor))
-    final.plot.list[[10]]=grob()
-  }else if (x.lab.pos=="bottom"){
-    heigths[2]=0
-    if(!x.lab.rot){heigths[4]=heigths[4]/length(levels(data.to.plot[,1]))}
-    final.plot.list[[2]]=grob()
-    final.plot.list[[10]]=dynTextGrob(levels(data.to.plot[,1]), x=x_coords, rot=ifelse(x.lab.rot, 90, 0),
-                                      just="top", y=0.95, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))* x.lab.size.factor))
-  }else if (x.lab.pos == "both"){
-    final.plot.list[[2]]=dynTextGrob(levels(data.to.plot[,1]), x=x_coords, rot=ifelse(x.lab.rot, 90, 0),
-                                     just="bottom", y=0.05, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))* x.lab.size.factor))
-    final.plot.list[[10]]=dynTextGrob(levels(data.to.plot[,1]), x=x_coords, rot=ifelse(x.lab.rot, 90, 0),
-                                      just="top", y=0.95, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))* x.lab.size.factor))
-    if(!x.lab.rot){heigths[c(2,4)]=heigths[c(2,4)]/length(levels(data.to.plot[,1]))}
-  }else if (x.lab.pos == "none"){
-    heigths[c(2,4)]=0
-    final.plot.list[[2]]=grob()
-    final.plot.list[[10]]=grob()
-  }
-
-  y_coords=rescale(x = seq(1, length(levels(data.to.plot[,2]))), to = c(0,1), from=c(0.5,length(levels(data.to.plot[,2]))+0.5))
-  if(y.lab.pos == "left"){
-    widths[4]=0
-    final.plot.list[[4]]=dynTextGrob(levels(data.to.plot[,2]), x=0.95, y=y_coords, width=0.95,
-                                     just="right", adjustJust = F)
-    final.plot.list[[6]]=grob()
-  }else if (y.lab.pos=="right"){
-    widths[2]=0
-    final.plot.list[[4]]=grob()
-    final.plot.list[[6]]=dynTextGrob(levels(data.to.plot[,2]), x=0.05, y=y_coords,  width=0.95,
-                                     just="left")
-  }else if (y.lab.pos == "both"){
-    final.plot.list[[4]]=dynTextGrob(levels(data.to.plot[,2]), x=0.95, y=y_coords, width=0.95,
-                                     just="right", adjustJust = F)
-    final.plot.list[[6]]=dynTextGrob(levels(data.to.plot[,2]), x=0.05, y=y_coords,  width=0.95,
-                                     just="left")
-  }else if (y.lab.pos == "none"){
-    widths[c(2,4)]=0
-    final.plot.list[[4]]=grob()
-    final.plot.list[[6]]=grob()
-  }
-
-
-
-  ### 4.2 Dendrogramms ----
-  # Arrange dotplot with dendrogramms
-
+  
   remove_geom <- function(ggplot2_object, geom_type) {
     # Delete layers that match the requested type.
     layers <- lapply(ggplot2_object$layers, function(x) {
@@ -1027,8 +971,60 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
     ggplot2_object$layers <- layers
     ggplot2_object
   }
-
+  
   p_raw=remove_geom(p, c("GeomCustomAnn","GeomPoint","GeomRect","GeomText","GeomSegment"))
+
+
+  ### 4.1 Axis Labels ----
+
+  # x_coords=rescale(x = 1:length(levels(data.to.plot[,1])), to = c(0,1), from=c(0.5,length(levels(data.to.plot[,1]))+0.5))
+  # final.plot.list[[2]]=dynTextGrob(levels(data.to.plot[,1]), x=x_coords, rot=ifelse(x.lab.rot, 90, 0),just="bottom", y=0.05, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))* x.lab.size.factor))
+  # final.plot.list[[10]]=dynTextGrob(levels(data.to.plot[,1]), x=x_coords, rot=ifelse(x.lab.rot, 90, 0),just="top", y=0.95, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))* x.lab.size.factor))
+  
+  final.plot.list[[2]]= p_raw + geom_text(data = data.frame(text=levels(data.to.plot[,1])), mapping = aes(label=text), y=0.05, x=1:length(levels(data.to.plot[,1])), hjust=0, vjust=0.5, angle=90, size=3.88*x.lab.size.factor)
+  final.plot.list[[2]]= final.plot.list[[2]]+coord_cartesian(ylim = c(0,1),xlim=c(0.5,length(unique(data.to.plot[,2]))+0.5),expand=F, default = T) + theme(plot.margin = unit(c(0,2,0,0), units = "points"))
+  
+  final.plot.list[[10]]= p_raw + geom_text(data = data.frame(text=levels(data.to.plot[,1])), mapping = aes(label=text), y=0.95, x=1:length(levels(data.to.plot[,2])), hjust=1, vjust=0.5, angle=90, size=3.88*x.lab.size.factor)
+  final.plot.list[[10]]= final.plot.list[[10]]+coord_cartesian(ylim = c(0,1),xlim=c(0.5,length(unique(data.to.plot[,2]))+0.5),expand=F, default = T) + theme(plot.margin = unit(c(2,0,0,0), units = "points"))
+  
+  if(x.lab.pos == "top"){
+    heigths[4]=0
+    final.plot.list[[10]]=grob()
+  }else if (x.lab.pos=="bottom"){
+    heigths[2]=0
+    final.plot.list[[2]]=grob()
+  }else if (x.lab.pos == "none"){
+    heigths[c(2,4)]=0
+    final.plot.list[[2]]=grob()
+    final.plot.list[[10]]=grob()
+  }
+
+  # y_coords=rescale(x = seq(1, length(levels(data.to.plot[,2]))), to = c(0,1), from=c(0.5,length(levels(data.to.plot[,2]))+0.5))
+  # final.plot.list[[4]]=dynTextGrob(levels(data.to.plot[,2]), x=0.95, y=y_coords, width=0.95,just="right", adjustJust = F)
+  # final.plot.list[[4]]=textGrob(levels(data.to.plot[,2]),y=y_coords, x=0.95,gp = gpar(fontsize = 10), just="right")
+  # final.plot.list[[6]]=dynTextGrob(levels(data.to.plot[,2]), x=0.05, y=y_coords,  width=0.95,just="left")
+  final.plot.list[[4]]= p_raw + geom_text(data = data.frame(text=levels(data.to.plot[,2])), mapping = aes(label=text), x=1, y=1:length(levels(data.to.plot[,2])), hjust=1, vjust=0.5, size=3.88*y.lab.size.factor)
+  final.plot.list[[4]]= final.plot.list[[4]]+coord_cartesian(xlim = c(0,1),ylim=c(0.5,length(unique(data.to.plot[,2]))+0.5),expand=F, default = T) + theme(plot.margin = unit(c(0,2,2,0), units = "points"))
+  
+  final.plot.list[[6]]= p_raw + geom_text(data = data.frame(text=levels(data.to.plot[,2])), mapping = aes(label=text), x=0.05, y=1:length(levels(data.to.plot[,2])), hjust=0, vjust=0.5, size=3.88*y.lab.size.factor)
+  final.plot.list[[6]]= final.plot.list[[6]]+coord_cartesian(xlim = c(0,1),ylim=c(0.5,length(unique(data.to.plot[,2]))+0.5),expand=F, default = T) + theme(plot.margin = unit(c(0,0,2,2), units = "points"))
+  
+  if(y.lab.pos == "left"){
+    widths[4]=0
+    final.plot.list[[6]]=grob()
+  }else if (y.lab.pos=="right"){
+    widths[2]=0
+    final.plot.list[[4]]=grob()
+  }else if (y.lab.pos == "none"){
+    widths[c(2,4)]=0
+    final.plot.list[[4]]=grob()
+    final.plot.list[[6]]=grob()
+  }
+
+
+
+  ### 4.2 Dendrogramms ----
+  # Arrange dotplot with dendrogramms
 
   if(!is.null(hc_x_result)){
     # Arrange x dendrogram
