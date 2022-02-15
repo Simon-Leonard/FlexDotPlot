@@ -102,7 +102,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
                      ){
 
   ## For debuging
-  # data.to.plot; size_var=NA;col_var=NA; text_var=NA; shape_var=16;
+  # size_var=NA;col_var=NA; text_var=NA; shape_var=16;
   # size_legend=""; col_legend=""; shape_legend="";
   # cols.use = "default";
   # text.size=NA;  text.vjust=0;
@@ -984,7 +984,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
   final.plot.list[[2]]= p_raw + geom_text(data = data.frame(text=levels(data.to.plot[,1])), mapping = aes(label=text), y=0.05, x=1:length(levels(data.to.plot[,1])), hjust=0, vjust=0.5, angle=90, size=3.88*x.lab.size.factor)
   final.plot.list[[2]]= final.plot.list[[2]]+coord_cartesian(ylim = c(0,1),xlim=c(0.5,length(unique(data.to.plot[,2]))+0.5),expand=F, default = T) + theme(plot.margin = unit(c(0,2,0,0), units = "points"))
   
-  final.plot.list[[10]]= p_raw + geom_text(data = data.frame(text=levels(data.to.plot[,1])), mapping = aes(label=text), y=0.95, x=1:length(levels(data.to.plot[,2])), hjust=1, vjust=0.5, angle=90, size=3.88*x.lab.size.factor)
+  final.plot.list[[10]]= p_raw + geom_text(data = data.frame(text=levels(data.to.plot[,1])), mapping = aes(label=text), y=0.95, x=1:length(levels(data.to.plot[,1])), hjust=1, vjust=0.5, angle=90, size=3.88*x.lab.size.factor)
   final.plot.list[[10]]= final.plot.list[[10]]+coord_cartesian(ylim = c(0,1),xlim=c(0.5,length(unique(data.to.plot[,2]))+0.5),expand=F, default = T) + theme(plot.margin = unit(c(2,0,0,0), units = "points"))
   
   if(x.lab.pos == "top"){
