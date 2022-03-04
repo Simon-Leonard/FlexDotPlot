@@ -982,10 +982,14 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
   # final.plot.list[[10]]=dynTextGrob(levels(data.to.plot[,1]), x=x_coords, rot=ifelse(x.lab.rot, 90, 0),just="top", y=0.95, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))* x.lab.size.factor))
   
   final.plot.list[[2]]= p_raw + geom_text(data = data.frame(text=levels(data.to.plot[,1])), mapping = aes(label=text), y=0.05, x=1:length(levels(data.to.plot[,1])), hjust=0, vjust=0.5, angle=90, size=3.88*x.lab.size.factor)
-  final.plot.list[[2]]= final.plot.list[[2]]+coord_cartesian(ylim = c(0,1),xlim=c(0.5,length(unique(data.to.plot[,2]))+0.5),expand=F, default = T) + theme(plot.margin = unit(c(0,2,0,0), units = "points"))
+  final.plot.list[[2]]= final.plot.list[[2]]+
+    coord_cartesian(ylim = c(0,1),xlim=c(0.5,length(unique(data.to.plot[,1]))+0.5),expand=F, default = T) + 
+    theme(plot.margin = unit(c(0,2,0,0), units = "points"), plot.background = element_rect(fill='transparent', color=NA))
   
   final.plot.list[[10]]= p_raw + geom_text(data = data.frame(text=levels(data.to.plot[,1])), mapping = aes(label=text), y=0.95, x=1:length(levels(data.to.plot[,1])), hjust=1, vjust=0.5, angle=90, size=3.88*x.lab.size.factor)
-  final.plot.list[[10]]= final.plot.list[[10]]+coord_cartesian(ylim = c(0,1),xlim=c(0.5,length(unique(data.to.plot[,2]))+0.5),expand=F, default = T) + theme(plot.margin = unit(c(2,0,0,0), units = "points"))
+  final.plot.list[[10]]= final.plot.list[[10]]+
+    coord_cartesian(ylim = c(0,1),xlim=c(0.5,length(unique(data.to.plot[,1]))+0.5),expand=F, default = T) + 
+    theme(plot.margin = unit(c(2,0,0,0), units = "points"),plot.background = element_rect(fill='transparent', color=NA))
   
   if(x.lab.pos == "top"){
     heigths[4]=0
@@ -1004,10 +1008,12 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
   # final.plot.list[[4]]=textGrob(levels(data.to.plot[,2]),y=y_coords, x=0.95,gp = gpar(fontsize = 10), just="right")
   # final.plot.list[[6]]=dynTextGrob(levels(data.to.plot[,2]), x=0.05, y=y_coords,  width=0.95,just="left")
   final.plot.list[[4]]= p_raw + geom_text(data = data.frame(text=levels(data.to.plot[,2])), mapping = aes(label=text), x=1, y=1:length(levels(data.to.plot[,2])), hjust=1, vjust=0.5, size=3.88*y.lab.size.factor)
-  final.plot.list[[4]]= final.plot.list[[4]]+coord_cartesian(xlim = c(0,1),ylim=c(0.5,length(unique(data.to.plot[,2]))+0.5),expand=F, default = T) + theme(plot.margin = unit(c(0,2,2,0), units = "points"))
+  final.plot.list[[4]]= final.plot.list[[4]]+coord_cartesian(xlim = c(0,1),ylim=c(0.5,length(unique(data.to.plot[,2]))+0.5),expand=F, default = T) + 
+    theme(plot.margin = unit(c(0,2,2,0), units = "points"),plot.background = element_rect(fill='transparent', color=NA))
   
   final.plot.list[[6]]= p_raw + geom_text(data = data.frame(text=levels(data.to.plot[,2])), mapping = aes(label=text), x=0.05, y=1:length(levels(data.to.plot[,2])), hjust=0, vjust=0.5, size=3.88*y.lab.size.factor)
-  final.plot.list[[6]]= final.plot.list[[6]]+coord_cartesian(xlim = c(0,1),ylim=c(0.5,length(unique(data.to.plot[,2]))+0.5),expand=F, default = T) + theme(plot.margin = unit(c(0,0,2,2), units = "points"))
+  final.plot.list[[6]]= final.plot.list[[6]]+coord_cartesian(xlim = c(0,1),ylim=c(0.5,length(unique(data.to.plot[,2]))+0.5),expand=F, default = T) + 
+    theme(plot.margin = unit(c(0,0,2,2), units = "points"), plot.background = element_rect(fill='transparent', color=NA))
   
   if(y.lab.pos == "left"){
     widths[4]=0
