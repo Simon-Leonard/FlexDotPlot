@@ -45,3 +45,6 @@ usethis::use_package("data.table", type = "Suggests")
 devtools::build_vignettes()
 # pkgdown::build_site()
 # devtools::check_rhub(env_vars=c(R_COMPILE_AND_INSTALL_PACKAGES = "always"))
+
+# converts roxygen comments to .Rd files.
+# roxygen2::roxygenise() 

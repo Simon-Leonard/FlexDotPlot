@@ -24,7 +24,6 @@ dot_plot(
   scale.max = NA,
   plot.legend = TRUE,
   do.return = FALSE,
-  x.lab.rot = TRUE,
   x.lab.pos = c("both", "top", "bottom", "none"),
   y.lab.pos = c("left", "right", "both", "none"),
   x.lab.size.factor = 1,
@@ -95,8 +94,6 @@ If coloring is discrete, default colors are taken from the default ggplot2 palet
 
 \item{do.return}{Return ggplot2 object ?}
 
-\item{x.lab.rot}{Rotate x-axis labels ?}
-
 \item{x.lab.pos}{Where to display x axis labels. This must be one of "bottom","top","both" or "none".}
 
 \item{y.lab.pos}{Where to display y axis labels. This must be one of "left","right","both"or "none".}
@@ -149,7 +146,7 @@ col_var="ADT.avg.exp.scaled", text_var="ADT.pct.exp.sup.cutoff",
 shape_var="canonical_marker", shape_use = c("\u25CF","\u2737"),x.lab.pos="bottom",
 y.lab.pos="left", cols.use=c("lightgrey","orange","red", "darkred"),
 size_legend="RNA", col_legend="ADT", shape_legend="Canonical marker ?",
-shape.scale =12, text.size=3, plot.legend = TRUE,x.lab.rot = TRUE,
+shape.scale =12, text.size=3, plot.legend = TRUE,
 size.breaks.number=4, color.breaks.number=4, shape.breaks.number=5,
 dend_x_var=c("RNA.avg.exp.scaled","ADT.avg.exp.scaled"),
 dend_y_var=c("RNA.avg.exp.scaled","ADT.avg.exp.scaled"),

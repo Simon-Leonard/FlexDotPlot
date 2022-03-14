@@ -508,15 +508,15 @@ function(input, output, session) {
         status = "primary", solidHeader = TRUE, collapsible = TRUE, width=12,
         fluidRow(
           column(4, radioButtons("plot_legend", label="Display legend ?", choices=list("Yes"=TRUE,"No"=FALSE), selected=TRUE)),
-          column(4, radioButtons("x_lab_rot", label="Rotate x labels ?", choices=list("Yes"=TRUE,"No"=FALSE), selected=FALSE)),
+          # column(4, radioButtons("x_lab_rot", label="Rotate x labels ?", choices=list("Yes"=TRUE,"No"=FALSE), selected=FALSE)),
           column(4, selectInput(inputId="x_lab_pos", label = "x label position",
                                 choices=c("bottom"="bottom","top"="top","both"="both","none"="none" ), selected=1)),
           column(4, selectInput(inputId="y_lab_pos", label = "y label position",
                                 choices=c("left"="left","right"="right","both"="both","none"="none" ), selected=1))
         ),
         fluidRow(
-          column(3, numericInput("plot_height", "Plot height", value=6)),
-          column(3, numericInput("plot_width", "Plot width", 6))
+          column(3, numericInput("plot_height", "Plot height", value=round(length(unique(mydata2()[,c(input$y_axis)]))*0.36+0.12))),
+          column(3, numericInput("plot_width", "Plot width", value=round(length(unique(mydata2()[,c(input$x_axis)]))*0.43+0.24)))
         ),
         fluidRow(
           column(6, pickerInput(inputId = "x_dend_picker", label="Column to calculate dendrogramm (x axis)",
@@ -575,10 +575,10 @@ function(input, output, session) {
       if(input$down_format=="pdf"){
         require(grDevices)
         cairo_pdf(file, width = input$plot_width*100/72, height=input$plot_height*100/72, family="Lucida Console")
-        plot(myplot)
+        plot(myplot$plot)
         dev.off()
       }else{
-        ggsave(myplot, filename = file, device=input$down_format, width = input$plot_width*100/72, height=input$plot_height*100/72,units = "in",dpi=72)
+        ggsave(myplot$plot, filename = file, device=input$down_format, width = input$plot_width*100/72, height=input$plot_height*100/72,units = "in",dpi=72)
       }
     }
   )
@@ -631,9 +631,9 @@ function(input, output, session) {
   plot_legend <- reactive({
     if(input$plot_legend=="TRUE"){TRUE}else{FALSE}
   })
-  x_lab_rot <- reactive({
-    if(input$x_lab_rot=="TRUE"){TRUE}else{FALSE}
-  })
+  # x_lab_rot <- reactive({
+  #   if(input$x_lab_rot=="TRUE"){TRUE}else{FALSE}
+  # })
 
   shape_var <- reactive({
     if(is.numeric(input$shape_var)){
@@ -697,7 +697,8 @@ function(input, output, session) {
                           size_legend=input$size_leg, col_legend=input$col_leg, shape_legend=input$shape_leg,
                           cols.use = cols_to_use(), shape.scale = input$shape.scale, text.size=text_size(),
                           scale.by = "radius", scale.min = NA, scale.max = NA, plot.legend = plot_legend(), do.return = TRUE,
-                          x.lab.rot = x_lab_rot(), horizontal_coloring=NA,
+                          # x.lab.rot = x_lab_rot(), 
+                          horizontal_coloring=NA,
                           size.breaks.number=size_breaks(), color.breaks.number=col_breaks(), transpose=FALSE,
                           dend_x_var = input$x_dend_picker, dend_y_var = input$y_dend_picker,
                           dist_method = input$dist_method, hclust_method = input$hclust_method,
@@ -742,7 +743,8 @@ function(input, output, session) {
                               size_legend=input$size_leg, col_legend=input$col_leg, shape_legend=input$shape_leg,
                               cols.use = cols_to_use(), shape.scale = input$shape.scale, text.size=text_size(),
                               scale.by = "radius", scale.min = NA, scale.max = NA, plot.legend = plot_legend(), do.return = TRUE,
-                              x.lab.rot = x_lab_rot(), horizontal_coloring=NA,
+                              # x.lab.rot = x_lab_rot(), 
+                              horizontal_coloring=NA,
                               size.breaks.number=size_breaks(), color.breaks.number=col_breaks(), transpose=FALSE,
                               dend_x_var = input$x_dend_picker, dend_y_var = input$y_dend_picker,
                               dist_method = input$dist_method, hclust_method = input$hclust_method,
@@ -843,7 +845,8 @@ function(input, output, session) {
                              ', \n x.lab.pos="',input$x_lab_pos,'",y.lab.pos="',input$y_lab_pos,'"',
                              ', \n cols.use=',paste('c("',paste(cols_to_use(),collapse = '","'),'")',sep=""),',size_legend="',input$size_leg,'", col_legend="',input$col_leg,'", shape_legend="',shape_legend(),
                              '", \n shape.scale =',input$shape.scale,', text.size=',text_size(),
-                             ', \n plot.legend = ',plot_legend(),',x.lab.rot = ',x_lab_rot(),
+                             ', \n plot.legend = ',plot_legend(),
+                             # ',x.lab.rot = ',x_lab_rot(),
                              ', \n size.breaks.number=',size_breaks(),', color.breaks.number=',col_breaks(),', shape.breaks.number=',shape_breaks(),
                              '\n',dend_x_print(), dend_y_print(),
                              dist_meth_print(), hclust_meth_print(),

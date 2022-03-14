@@ -519,7 +519,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
                                        round(color_breaks,2)) # Values <1e-3 or >1e3 (excepted 0), are displayed with scientific notation
 
       map2color<-function(x,pal,limits=NULL){
-        if(is.null(limits)) limits=range(x)
+        if(is.null(limits)) limits=range(x, na.rm = T)
         pal[findInterval(x,seq(limits[1],limits[2],length.out=length(pal)+1), all.inside=TRUE)]
       }
 
@@ -640,7 +640,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
 
       }
     })
-    sym.grob=lapply(1:nrow(data.to.plot), function(x){symbolsGrob(pie_charts[[pacman_opening[x]]],
+    sym.grob=lapply(which(!is.na(pacman_opening)), function(x){symbolsGrob(pie_charts[[pacman_opening[x]]],
                                                        x=rescale(as.numeric(data.to.plot[x,1]),from=xlims),
                                                        y=rescale(as.numeric(data.to.plot[x,2]),from=ylims),
                                                        default.units="npc", gpFUN = gp_color[[x]],
@@ -685,7 +685,10 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
 
       if(pacman_breaks>(length(unique(data.to.plot[,2]))-1)){stop(paste("To much shape breaks (considering the column which controls y axis labels, max value for this dataset is ",(length(unique(data.to.plot[,2]))-1),
                                                                         "). Use a lower shape.breaks.number or decrease the length of shape.breaks.values", sep=""))}
-
+      
+      if(any(ori_labels<0)){
+        ori_labels=ori_labels-min(na.omit(shape))
+      }
 
       #Scale between 0 and 2pi :
       pacman_opening=ori_labels*2*pi/max(na.omit(shape_pos))
@@ -848,13 +851,13 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
         }else{unicode_shapes= shape_use}
 
 
-        if(length(unique(as.factor(shape))) > length(unicode_shapes)){
+        if(length(levels(as.factor(shape))) > length(unicode_shapes)){
           cat(paste("\n The default shape palette can deal with a maximum of", length(unicode_shapes),"discrete values (You have",length(unique(as.factor(shape)))
                     ,"). \n Recycling shapes. \n Consider specifying shapes manually by setting 'do.return=TRUE' and adding a scale_shape_manual command"))
-          custom_shapes=rep_len(unicode_shapes,length.out = length(unique(as.factor(shape))))
-        }else {custom_shapes=unicode_shapes[1:length(unique(as.factor(shape)))]}
+          custom_shapes=rep_len(unicode_shapes,length.out = length(levels(as.factor(shape))))
+        }else {custom_shapes=unicode_shapes[1:length(levels(as.factor(shape)))]}
 
-        p <- p + scale_shape_manual(values=custom_shapes)
+        p <- p + scale_shape_manual(values=custom_shapes, na.translate=FALSE)
 
         # Adding maximal shape area as a shade
         if(display_max_sizes){
@@ -894,9 +897,9 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
       plot_colors=get_shape_colors(data.to.plot, cols.use, color.breaks.values, color.breaks.number)
       # Display colors
       if (is.numeric(data.to.plot[,4])){
-        p <- p + scale_color_gradientn(colors=plot_colors$palette, breaks=plot_colors$breaks, labels=plot_colors$labels)
+        p <- p + scale_color_gradientn(colors=plot_colors$palette, breaks=plot_colors$breaks, labels=plot_colors$labels, na.value = "transparent")
       }else{
-        p <- p + scale_color_manual(values = plot_colors$palette)
+        p <- p + scale_color_manual(values = plot_colors$palette, na.value="transparent")
       }
 
     }
@@ -981,12 +984,13 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
   # final.plot.list[[2]]=dynTextGrob(levels(data.to.plot[,1]), x=x_coords, rot=ifelse(x.lab.rot, 90, 0),just="bottom", y=0.05, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))* x.lab.size.factor))
   # final.plot.list[[10]]=dynTextGrob(levels(data.to.plot[,1]), x=x_coords, rot=ifelse(x.lab.rot, 90, 0),just="top", y=0.95, width=ifelse(x.lab.rot, 1, 1/length(levels(data.to.plot[,1]))* x.lab.size.factor))
   
-  final.plot.list[[2]]= p_raw + geom_text(data = data.frame(text=levels(data.to.plot[,1])), mapping = aes(label=text), y=0.05, x=1:length(levels(data.to.plot[,1])), hjust=0, vjust=0.5, angle=90, size=3.88*x.lab.size.factor)
+  x_label_table=data.frame(xtext=levels(data.to.plot[,1]))
+  final.plot.list[[2]]= p_raw + geom_text(data = x_label_table, mapping = aes_(label=~xtext), y=0.05, x=1:length(levels(data.to.plot[,1])), hjust=0, vjust=0.5, angle=90, size=3.88*x.lab.size.factor)
   final.plot.list[[2]]= final.plot.list[[2]]+
     coord_cartesian(ylim = c(0,1),xlim=c(0.5,length(unique(data.to.plot[,1]))+0.5),expand=F, default = T) + 
     theme(plot.margin = unit(c(0,2,0,0), units = "points"), plot.background = element_rect(fill='transparent', color=NA))
   
-  final.plot.list[[10]]= p_raw + geom_text(data = data.frame(text=levels(data.to.plot[,1])), mapping = aes(label=text), y=0.95, x=1:length(levels(data.to.plot[,1])), hjust=1, vjust=0.5, angle=90, size=3.88*x.lab.size.factor)
+  final.plot.list[[10]]= p_raw + geom_text(data = x_label_table, mapping = aes_(label=~xtext), y=0.95, x=1:length(levels(data.to.plot[,1])), hjust=1, vjust=0.5, angle=90, size=3.88*x.lab.size.factor)
   final.plot.list[[10]]= final.plot.list[[10]]+
     coord_cartesian(ylim = c(0,1),xlim=c(0.5,length(unique(data.to.plot[,1]))+0.5),expand=F, default = T) + 
     theme(plot.margin = unit(c(2,0,0,0), units = "points"),plot.background = element_rect(fill='transparent', color=NA))
@@ -1007,11 +1011,13 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
   # final.plot.list[[4]]=dynTextGrob(levels(data.to.plot[,2]), x=0.95, y=y_coords, width=0.95,just="right", adjustJust = F)
   # final.plot.list[[4]]=textGrob(levels(data.to.plot[,2]),y=y_coords, x=0.95,gp = gpar(fontsize = 10), just="right")
   # final.plot.list[[6]]=dynTextGrob(levels(data.to.plot[,2]), x=0.05, y=y_coords,  width=0.95,just="left")
-  final.plot.list[[4]]= p_raw + geom_text(data = data.frame(text=levels(data.to.plot[,2])), mapping = aes(label=text), x=1, y=1:length(levels(data.to.plot[,2])), hjust=1, vjust=0.5, size=3.88*y.lab.size.factor)
+  
+  y_label_table=data.frame(ytext=levels(data.to.plot[,2]))
+  final.plot.list[[4]]= p_raw + geom_text(data = y_label_table, mapping = aes_(label=~ytext), x=1, y=1:length(levels(data.to.plot[,2])), hjust=1, vjust=0.5, size=3.88*y.lab.size.factor)
   final.plot.list[[4]]= final.plot.list[[4]]+coord_cartesian(xlim = c(0,1),ylim=c(0.5,length(unique(data.to.plot[,2]))+0.5),expand=F, default = T) + 
     theme(plot.margin = unit(c(0,2,2,0), units = "points"),plot.background = element_rect(fill='transparent', color=NA))
   
-  final.plot.list[[6]]= p_raw + geom_text(data = data.frame(text=levels(data.to.plot[,2])), mapping = aes(label=text), x=0.05, y=1:length(levels(data.to.plot[,2])), hjust=0, vjust=0.5, size=3.88*y.lab.size.factor)
+  final.plot.list[[6]]= p_raw + geom_text(data = y_label_table, mapping = aes_(label=~ytext), x=0.05, y=1:length(levels(data.to.plot[,2])), hjust=0, vjust=0.5, size=3.88*y.lab.size.factor)
   final.plot.list[[6]]= final.plot.list[[6]]+coord_cartesian(xlim = c(0,1),ylim=c(0.5,length(unique(data.to.plot[,2]))+0.5),expand=F, default = T) + 
     theme(plot.margin = unit(c(0,0,2,2), units = "points"), plot.background = element_rect(fill='transparent', color=NA))
   
