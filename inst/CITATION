@@ -1,0 +1,14 @@
+citEntry(
+  entry = "article",
+  author = personList(as.person("Simon Leonard"),
+                      as.person("Aurélie Lardenois"),
+                      as.person("Karin Tarte"),
+                      as.person("Antoine D Rolland"),
+                      as.person("Frédéric Chalmel")),
+  title = "FlexDotPlot: a universal and modular dot plot visualization tool for complex multifaceted data",
+  journal = "Bioinformatics Advances",
+  year = "2022",
+  doi = "10.1093/bioadv/vbac019",
+  url = "https://doi.org/10.1093/bioadv/vbac019",
+  textVersion = "Leonard et al. FlexDotPlot: a universal and modular dot plot visualization tool for complex multifaceted data. Bioinformatics Advances (2022)"
+)

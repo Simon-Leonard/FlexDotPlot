@@ -45,11 +45,11 @@ Here are some plots generated with FlexDotPlot ([scripts to reproduce the figure
 
 # Reference
 
-Simon Leonard, Antoine D Rolland, Karin Tarte, Frédéric Chalmel, Aurélie Lardenois
+Simon Leonard, Aurélie Lardenois, Karin Tarte, Antoine Rolland, Frédéric Chalmel,
 
-FlexDotPlot: a universal and modular dot plot visualization tool for complex multifaceted data
+FlexDotPlot: a universal and modular dot plot visualization tool for complex multifaceted data,
 
-<https://doi.org/10.1101/2020.04.03.023655>
+Bioinformatics Advances, 2022;, vbac019, <https://doi.org/10.1093/bioadv/vbac019>
 
 See also the [FlexDotPlot_paper](https://github.com/Simon-Leonard/FlexDotPlot_paper) repository to get the scripts used for analysis and figure generation in the FlexDotPlot paper
 

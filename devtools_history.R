@@ -39,6 +39,7 @@ usethis::use_package("biomaRt", type = "Suggests")
 usethis::use_package("data.table", type = "Suggests")
 
 
+usethis::use_citation()
 
 
 
