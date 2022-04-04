@@ -142,7 +142,7 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
 
   ### 1: Data formatting ----
   ### 1.1: List to data.frame conversion ----
-  if (class(data.to.plot)=="list"){
+  if (inherits(data.to.plot, "list")){
     #Input=list -> Conversion to data.frame
 
     # Check - All the list elements are data.frame

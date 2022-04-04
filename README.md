@@ -31,7 +31,7 @@ The FlexDotPlot package contains the following functions :
 
 1- The dot_plot() function to generate dot plot with command line. Function help is available with help("dot_plot").
 
-Have a look on the [FlexDotPlot tutorial](https://github.com/Simon-Leonard/FlexDotPlot/blob/master/vignettes/) or on the [scripts to reproduce the article figures](https://github.com/Simon-Leonard/FlexDotPlot_paper) to see how we can use this function in details.
+Have a look on the [FlexDotPlot tutorial](https://github.com/Simon-Leonard/FlexDotPlot/tree/master/vignettes) or on the [scripts to reproduce the article figures](https://github.com/Simon-Leonard/FlexDotPlot_paper) to see how we can use this function in details.
 
 2- The Shiny_dot_plot() function to generate dot plot in an interactive way with a Shiny application.
 

@@ -1,3 +1,7 @@
+## [0.2.2] - 2022-04-04
+### Minor update
+- Updates citation
+
 ## [0.2.1] - 2022-02-03
 ### Minor update
 - Added CellphoneDB_example_data.rda and documentation. Modified the cellphoneDB vignette to take this dataset as input
