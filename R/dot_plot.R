@@ -455,14 +455,14 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
       shading$col=rep(vertical_coloring, length.out=nrow(shading))
 
       p <- p + annotate(geom = "rect", xmin = shading$min, xmax = shading$max,
-                        ymin = 0.5, ymax = max(as.numeric(data.to.plot[,2]))+0.5, fill = shading$col, col=NULL)
+                        ymin = 0.5, ymax = max(as.numeric(data.to.plot[,2]))+0.5, fill = shading$col, col=NA)
 
       # Adding black lines to delimitate shades
       # We use another annotate to not display first and last line; otherwise add colour="black" in the previous annotate
       p <- p + annotate(geom = "segment", x = c(shading$min[-1], shading$max[-length(shading$max)]),
                         xend = c(shading$min[-1], shading$max[-length(shading$max)]),
                         y = 0.5, yend = max(as.numeric(data.to.plot[,2]))+0.5,
-                        colour = "black")
+                        colour = NA)
     }
 
     # Horizontal coloring
@@ -473,13 +473,13 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
       shading$col=rep(horizontal_coloring, length.out=nrow(shading))
 
       p <- p + annotate(geom = "rect", xmin=0.5,xmax=max(as.numeric(data.to.plot[,1]))+0.5, ymin = shading$min, ymax = shading$max,
-                        fill = shading$col, col=NULL)
+                        fill = shading$col, col=NA)
 
       # Adding black lines to delimitate shades
       # We use another annotate to not display first and last line; otherwise add colour="black" in the previous annotate
       p <- p + annotate(geom = "segment", x=0.5,xend=max(as.numeric(data.to.plot[,1]))+0.5, y = c(shading$min[-1], shading$max[-length(shading$max)]),
                         yend = c(shading$min[-1], shading$max[-length(shading$max)]),
-                        colour = "black")
+                        colour = NA)
     }
 
     return(p)
