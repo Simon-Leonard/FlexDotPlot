@@ -343,7 +343,7 @@ ggplot_object <- dot_plot(data.to.plot = PBMC3K_example_data,
                           shape_var= "pct.exp",
                           col_var = "avg_logFC",
                           do.return = TRUE
-                          )
+                          )$plot
 ```
 
 

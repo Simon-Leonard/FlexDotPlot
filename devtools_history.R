@@ -4,6 +4,7 @@ usethis::use_build_ignore("devtools_history.R")
 usethis::use_package("FactoMineR")
 usethis::use_package("ggdendro")
 usethis::use_package("ggplot2")
+usethis::use_package("patchwork")
 usethis::use_package("grDevices")
 usethis::use_package("grid")
 usethis::use_package("gridExtra")
@@ -48,4 +49,4 @@ devtools::build_vignettes()
 # devtools::check_rhub(env_vars=c(R_COMPILE_AND_INSTALL_PACKAGES = "always"))
 
 # converts roxygen comments to .Rd files.
-# roxygen2::roxygenise() 
+# roxygen2::roxygenise()

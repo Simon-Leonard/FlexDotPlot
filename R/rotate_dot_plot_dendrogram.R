@@ -115,33 +115,43 @@ rotate_dot_plot_dendrogram=function(dot_plot_output, axis_to_rotate=c("x","y")){
     #                                                    expand=F, default = T) + theme(plot.margin = unit(c(0,0,0,2), units = "points"))
     # dendro_vertical <- dendro_vertical+ theme_void()
 
-    new_dot_plot$plot[[1]][[3]]=dendro_vertical
+    new_dot_plot$plot[[3]]=dendro_vertical
 
     #Keep other dendrogram from input object
-    new_dot_plot$plot[[1]][[1]]=dot_plot_output$plot[[1]][[1]]
+    new_dot_plot$plot[[1]]=dot_plot_output$plot[[1]]
 
   }else{
     dendro_horizontal <- dot_plot_output$raw_dend_ggplot + geom_segment(data = new_dend_data, mapping = aes_(x=~x,xend=~xend,
                                                                             y=~y,yend=~yend, label=NULL))
     dendro_horizontal <- dendro_horizontal+ theme_void()
 
-    new_dot_plot$plot[[1]][[1]]=dendro_horizontal
+    new_dot_plot$plot[[1]]=dendro_horizontal
 
     #Keep other dendrogram from input object
-    new_dot_plot$plot[[1]][[3]]=dot_plot_output$plot[[1]][[3]]
+    new_dot_plot$plot[[3]]=dot_plot_output$plot[[3]]
   }
 
 
   ### final output ----
   # Arrange final object
-  layout=rbind(c(NA,NA,1,NA,NA,NA,NA),
-               c(NA,NA,2,NA,NA,NA,NA),
-               c(3,4,5,6,7,8,9),
-               c(NA,NA,10,NA,NA,NA,NA))
-  final_plot=grid.arrange(grobs=new_dot_plot$plot[[1]],
-                         layout_matrix = layout,
-                         widths =dot_plot_output$plot$widths,
-                         heights = dot_plot_output$plot$heights)
+  # layout=rbind(c(NA,NA,1,NA,NA,NA,NA),
+  #              c(NA,NA,2,NA,NA,NA,NA),
+  #              c(3,4,5,6,7,8,9),
+  #              c(NA,NA,10,NA,NA,NA,NA))
+  # final_plot=grid.arrange(grobs=new_dot_plot$plot[[1]],
+  #                        layout_matrix = layout,
+  #                        widths =dot_plot_output$plot$widths,
+  #                        heights = dot_plot_output$plot$heights)
+  
+  
+  patchwork_layout="##A####
+                   ##B####
+                   CDEFGHI
+                   ##J####"
+  
+  final_plot=wrap_plots(new_dot_plot$plot, design = patchwork_layout, widths = dot_plot_output$plot$layout$patches$widths, heights = dot_plot_output$plot$layout$patches$heights)
+  
+  
   new_dot_plot$plot=final_plot
 
   # Add dot plot command to object

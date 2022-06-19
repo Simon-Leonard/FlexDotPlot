@@ -55,6 +55,7 @@
 #' @param do.plot Print the plot ? (default=TRUE)
 #'
 #' @import ggplot2
+#' @importFrom patchwork wrap_plots
 #' @importFrom grDevices colorRampPalette hcl
 #' @importFrom stats as.dendrogram dist hclust na.omit
 #' @importFrom FactoMineR PCA MCA FAMD
@@ -62,7 +63,6 @@
 #' @importFrom reshape2 dcast
 #' @importFrom ggdendro segment dendro_data
 #' @importFrom grImport2 readPicture symbolsGrob
-#' @importFrom gridExtra arrangeGrob grid.arrange
 #' @importFrom grid textGrob grob gpar
 #' @importFrom sisal dynTextGrob
 #'
@@ -101,8 +101,10 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
                         do.plot=TRUE
                      ){
 
-  ## For debuging
-  # size_var=NA;col_var=NA; text_var=NA; shape_var=16;
+  ### For debuging
+  # data(CBMC8K_example_data)
+  # data.to.plot=CBMC8K_example_data
+  # size_var="RNA.pct.exp";col_var="RNA.avg.exp"; text_var=NA; shape_var="RNA.pct.exp";
   # size_legend=""; col_legend=""; shape_legend="";
   # cols.use = "default";
   # text.size=NA;  text.vjust=0;
@@ -714,7 +716,6 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
 
       sym.grob <- ggplot() + lapply(sym.grob, annotation_custom) + theme_void()
 
-
       #fill free space with empty labels
       if(nrow(pacman_legend_data) < (length(unique(data.to.plot[,2]))-1)){
         nb_empty_plots=(length(unique(data.to.plot[,2]))-1)-nrow(pacman_legend_data)
@@ -725,13 +726,24 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
 
 
       # Generate legend labels grobs
-      pacman_labels_grob=textGrob(pacman_legend_data$label, gp = gpar(fontsize = 10), x=0.3,
-                                  y=1-rescale(1:nrow(pacman_legend_data),from=ylims))
+      # pacman_labels_grob=textGrob(pacman_legend_data$label, gp = gpar(fontsize = 10), x=0.3,
+      #                             y=1-rescale(1:nrow(pacman_legend_data),from=ylims))
+      pacman_labels_grob=ggplot(pacman_legend_data, aes_(label=~label))+
+        geom_text(x=0.3, y=1-rescale(1:nrow(pacman_legend_data),from=ylims))+
+        coord_cartesian(ylim=c(0,1), expand = FALSE)+theme_void()
+      
 
       #Concatenante all the legend grobs + Add legend title
-      shape_leg=arrangeGrob(textGrob(shape_legend, gp = gpar(fontsize = 12)),
+      # shape_leg=arrangeGrob(textGrob(shape_legend, gp = gpar(fontsize = 12)),
+      #                       sym.grob, pacman_labels_grob,
+      #                       layout_matrix = rbind(c(1,1),c(2,3)), heights = c(1, length(unique(data.to.plot[,2]))))
+      # shape_leg=arrangeGrob(textGrob(shape_legend, gp = gpar(fontsize = 12)),
+      #                       sym.grob, pacman_labels_grob,
+      #                       layout_matrix = rbind(c(1,1),c(2,3)), heights = c(1, length(unique(data.to.plot[,2]))))
+      
+      shape_leg=wrap_plots(ggplot()+annotate("text", label=shape_legend, x=1, y=1)+theme_void(),
                             sym.grob, pacman_labels_grob,
-                            layout_matrix = rbind(c(1,1),c(2,3)), heights = c(1, length(unique(data.to.plot[,2]))))
+                            design = "AA\nBC", heights = c(1, length(unique(data.to.plot[,2]))))
 
 
 
@@ -799,15 +811,24 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
 
         size_legend_data$label[is.na(size_legend_data$label)]=""
         # size_labels_grobs=dynTextGrob(size_legend_data$label, y=seq(0.95,0.05, length.out = nrow(size_legend_data)), width=0.4)
-        size_labels_grobs=textGrob(size_legend_data$label,
-                                   y=1-rescale(1:nrow(pacman_legend_data),from=ylims),
-                                   x=0.3, gp = gpar(fontsize = 10))
+        # size_labels_grobs=textGrob(size_legend_data$label,
+        #                            y=1-rescale(1:nrow(size_legend_data),from=ylims),
+        #                            x=0.3, gp = gpar(fontsize = 10))
+        
+        
+        size_labels_grob=ggplot(size_legend_data, aes_(label=~label))+
+          geom_text(x=0.3, y=1-rescale(1:nrow(size_legend_data),from=ylims))+
+          coord_cartesian(ylim=c(0,1), expand = FALSE)+theme_void()
 
 
         #Concatenante all the legend grobs + Add legend title
         # size_leg=arrangeGrob(dynTextGrob(size_legend, width=0.8), sym.grob, size_labels_grobs, layout_matrix = rbind(c(1,1),c(2,3)), heights = c(1, nrow(size_legend_data)))
-        size_leg=arrangeGrob(textGrob(size_legend, gp = gpar(fontsize = 12)), sym.grob, size_labels_grobs, layout_matrix = rbind(c(1,1),c(2,3)),
-                             heights = c(1, length(unique(data.to.plot[,2]))))
+        # size_leg=arrangeGrob(textGrob(size_legend, gp = gpar(fontsize = 12)), sym.grob, size_labels_grobs, layout_matrix = rbind(c(1,1),c(2,3)),
+        #                      heights = c(1, length(unique(data.to.plot[,2]))))
+        
+        size_leg=wrap_plots(ggplot()+annotate("text", label=size_legend, x=1, y=1)+theme_void(),
+                             sym.grob, size_labels_grob,
+                             design = "AA\nBC", heights = c(1, length(unique(data.to.plot[,2]))))
 
       }else{
         # size_leg=NULL
@@ -1154,10 +1175,17 @@ dot_plot <- function(data.to.plot, size_var=NA,col_var=NA, text_var=NA, shape_va
   ### 4.4 Render plot ----
   # return(final.plot.list) # for debug
 
-  final_plot=arrangeGrob(grobs = final.plot.list, layout_matrix = layout, widths = widths, heights = heigths)
+  # final_plot=arrangeGrob(grobs = final.plot.list, layout_matrix = layout, widths = widths, heights = heigths)
+  
+  patchwork_layout="##A####
+                   ##B####
+                   CDEFGHI
+                   ##J####"
+                   
+  final_plot=wrap_plots(final.plot.list, design = patchwork_layout, widths = widths, heights = heigths)
 
   if(do.plot){
-    grid.arrange(final_plot)
+    print(final_plot)
   }
   if (do.return) {
     final_output=list()

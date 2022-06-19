@@ -35,7 +35,8 @@ Imports:
     htmltools,
     bsplus,
     DT,
-    magrittr
+    magrittr,
+    patchwork
 Suggests: 
     knitr,
     rmarkdown,
